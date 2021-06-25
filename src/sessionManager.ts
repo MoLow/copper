@@ -1,5 +1,6 @@
 import * as os from 'os';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import * as stream from 'stream';
 import * as unzipper from 'unzipper';
 import * as mkdirp from 'mkdirp';
@@ -27,6 +28,8 @@ type desiredCapabilities = Partial<Record<typeof chomreOptionsPath[number], {
 
 export class SessionManager {
     private sessions = new Map<string, Session>();
+    private extensions = new Map<string, string>();
+    private extensionsPending = new Map<string, Promise<string>>();
 
     private serializeSession(id: string, session: Session) {
         return {
@@ -41,6 +44,31 @@ export class SessionManager {
     private getChromeOptions(desiredCapabilities: desiredCapabilities) {
         return desiredCapabilities['goog:chromeOptions'] || desiredCapabilities.chromeOptions;
     }
+
+    private async saveExtensionLocally(extension: string, directory: string) {
+        const data = Buffer.from(extension, 'base64');
+        const checksum = crypto.createHash('md5').update(data).digest('hex');
+
+        if (this.extensions.has(checksum)) {
+            return this.extensions.get(checksum);
+        }
+
+        const promise = this.extensionsPending.get(checksum) || new Promise<string>((resolve, reject) => {
+            const file = path.join(directory, uuid.v4().toUpperCase());
+            const readStream = stream.Readable.from(data);
+            logger.info(`writing extension to ${file}`);
+            readStream
+                .pipe(unzipper.Extract({ path: file }))
+                .on('error', err => reject(err))
+                .on('finish', () => {
+                    this.extensions.set(checksum, file);
+                    this.extensionsPending.delete(checksum)
+                    resolve(file);
+                })
+        });
+        this.extensionsPending.set(checksum, promise);
+        return await promise;
+    }
     
     private async handleExtensions(desiredCapabilities: desiredCapabilities, sessionId: string) {
         const chromeOptions = this.getChromeOptions(desiredCapabilities);
@@ -51,18 +79,15 @@ export class SessionManager {
         await mkdirp(extDir);
         chromeOptions.args = chromeOptions.args || [];
         const extensions: string[] =  desiredCapabilities?.chromeOptions?.extensions || [];
-        await Promise.all(extensions.map(extention => new Promise<void>((resolve, reject) => {
-            const file = path.join(extDir, uuid.v4().toUpperCase());
-            const readStream = stream.Readable.from(Buffer.from(extention, 'base64'));
-            logger.info(`writing extension to ${file}`);
-            readStream
-                .pipe(unzipper.Extract({ path: file }))
-                .on('error', err => reject(err))
-                .on('finish', () => {
-                    chromeOptions.args!.push(`--load-extension=${file}`);
-                    resolve();
-                })
-        })));
+        await Promise.all(extensions.map(extension => this
+            .saveExtensionLocally(extension, extDir)
+            .then(file => chromeOptions.args!.push(`--load-extension=${file}`))
+        ));
+    }
+
+    private async handleChromeProfile(desiredCapabilities: desiredCapabilities, sessionId: string) {
+        const profilePath = path.join(os.tmpdir(), 'puppeteer_dev_chrome_profile-');
+        await mkdirp(profilePath);
     }
 
     async createSession(opts: SessionOptions = {}, desiredCapabilities: desiredCapabilities = {}) {
