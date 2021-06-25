@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from "fastify";
-import { CopperError, UnsupportedActionError } from "./errors";
-import { logger } from "./logger";
+import { CopperError, UnsupportedActionError } from "../errors";
+import { logger } from "../logger";
 import { sessionManager, SessionOptions } from "./sessionManager";
 
 export type withSessionId = { Params: { sessionId: string } };

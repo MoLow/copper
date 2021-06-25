@@ -7,8 +7,8 @@ import * as mkdirp from 'mkdirp';
 import * as uuid from 'uuid';
 import * as WebSocket from 'ws';
 import { launch, Options, LaunchedChrome } from 'chrome-launcher';
-import { logger } from './logger';
-import { CreateSessionError, SessionNotFound } from './errors';
+import { logger } from '../logger';
+import { CreateSessionError, SessionNotFound } from '../errors';
 import fetch from 'node-fetch';
 
 export type SessionOptions = Omit<Options, 'handleSIGINT'>;
@@ -136,7 +136,7 @@ export class SessionManager {
         return this.serializeSession(id, session);
     }
 
-    getSessionWebsocket(id: string) {
+    getWSServer(id: string) {
         if (!this.sessions.has(id)) {
             throw new SessionNotFound(id);
         }

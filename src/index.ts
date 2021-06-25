@@ -1,7 +1,7 @@
 import * as yargs from "yargs";
 import { hideBin} from "yargs/helpers";
 import { logger } from "./logger";
-import { Server } from "./server";
+import { StandaloneServer } from "./standalone/server";
 
 
 const args = yargs(hideBin(process.argv))
@@ -15,11 +15,6 @@ const args = yargs(hideBin(process.argv))
       default: '/wd/hub/',
       description: 'Run with verbose logging'
     })
-    .option('verbose', {
-      alias: 'v',
-      type: 'boolean',
-      description: 'Run with verbose logging'
-    })
     .argv;
 
 
@@ -30,7 +25,7 @@ const args = yargs(hideBin(process.argv))
             throw new Error('Please run node index.js serve --port=PORT');
           }
           
-          const server = new Server(_args.port as number, _args["route-prefix"]);
+          const server = new StandaloneServer(_args.port as number, _args["route-prefix"]);
           await server.listen();
           logger.info('Copper up and listening on port', { port: _args.port });
         } catch (e) {
