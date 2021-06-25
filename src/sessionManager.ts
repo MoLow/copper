@@ -1,3 +1,8 @@
+import * as os from 'os';
+import * as path from 'path';
+import * as stream from 'stream';
+import * as unzipper from 'unzipper';
+import * as mkdirp from 'mkdirp';
 import * as uuid from 'uuid';
 import * as WebSocket from 'ws';
 import { launch, Options, LaunchedChrome } from 'chrome-launcher';
@@ -15,6 +20,11 @@ export interface Session {
 
 const chomreOptionsPath = ['chromeOptions', 'goog:chromeOptions'] as const;
 
+type desiredCapabilities = Partial<Record<typeof chomreOptionsPath[number], { 
+    args?: Array<string>;
+    extensions?: Array<string>
+}>>;
+
 export class SessionManager {
     private sessions = new Map<string, Session>();
 
@@ -28,15 +38,40 @@ export class SessionManager {
         }
     }
 
-    async createSession(opts: SessionOptions = {}, desiredCapabilities: any = {}) {
+    private getChromeOptions(desiredCapabilities: desiredCapabilities) {
+        return desiredCapabilities['goog:chromeOptions'] || desiredCapabilities.chromeOptions;
+    }
+    
+    private async handleExtensions(desiredCapabilities: desiredCapabilities, sessionId: string) {
+        const chromeOptions = this.getChromeOptions(desiredCapabilities);
+        if (!chromeOptions?.extensions?.length) {
+            return;
+        }
+        const extDir = path.join(os.tmpdir(), sessionId);
+        await mkdirp(extDir);
+        chromeOptions.args = chromeOptions.args || [];
+        const extensions: string[] =  desiredCapabilities?.chromeOptions?.extensions || [];
+        await Promise.all(extensions.map(extention => new Promise<void>((resolve, reject) => {
+            const file = path.join(extDir, uuid.v4().toUpperCase());
+            const readStream = stream.Readable.from(Buffer.from(extention, 'base64'));
+            logger.info(`writing extension to ${file}`);
+            readStream
+                .pipe(unzipper.Extract({ path: file }))
+                .on('error', err => reject(err))
+                .on('finish', () => {
+                    chromeOptions.args!.push(`--load-extension=${file}`);
+                    resolve();
+                })
+        })));
+    }
+
+    async createSession(opts: SessionOptions = {}, desiredCapabilities: desiredCapabilities = {}) {
         const id = uuid.v4().toUpperCase();
         
         try {
+            await this.handleExtensions(desiredCapabilities, id);
             const options = Object.assign({}, opts, desiredCapabilities ? {
-                chromeFlags: [
-                    ...desiredCapabilities?.[chomreOptionsPath[0]]?.args,
-                    ...desiredCapabilities?.[chomreOptionsPath[1]]?.args,
-                ],
+                chromeFlags: [ ...this.getChromeOptions(desiredCapabilities)?.args || [] ],
                 ignoreDefaultFlags: true
             } : {});
 
