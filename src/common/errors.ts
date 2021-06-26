@@ -1,5 +1,6 @@
-import { format } from 'util';
 import { StatusCodes } from 'http-status-codes';
+import { FastifyPluginCallback } from 'fastify';
+import { logger } from '../logger';
 
 export class BaseError {
     constructor (...args: any[]) {
@@ -45,3 +46,24 @@ export class UnsupportedActionError extends CopperError {
         super(error, 'unsupported action', StatusCodes.NOT_IMPLEMENTED);
     }
 }
+
+export class NoMatchingNode extends CopperError {
+    constructor(error: string) {
+        super(error, 'no matching node', StatusCodes.NOT_FOUND);
+    }
+}
+
+export const registerErrorHandler: FastifyPluginCallback = (app, opts, done) => {
+    app.setErrorHandler(async function (error, request, reply) {
+        if(error instanceof CopperError) {
+            reply
+                .code(error.statusCode)
+                .serializer((a :string) => a)
+                .header("content-type", "application/json; charset=utf-8")
+                .send(JSON.stringify(error));
+        }
+        logger.error("Request Error", error.message, error.stack);
+        reply.send(500);
+    });
+    done();
+  };

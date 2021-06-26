@@ -1,34 +1,53 @@
+import * as fs from "fs";
 import * as yargs from "yargs";
-import { hideBin} from "yargs/helpers";
+import { hideBin } from "yargs/helpers";
 import { logger } from "./logger";
 import { StandaloneServer } from "./standalone/server";
+import { HubServer } from "./grid/server";
+import { NodeServer } from "./node/server";
 
 
 const args = yargs(hideBin(process.argv))
-    .command('standalone', 'start a Copper standalone server')
-    .option('port', {
-      describe: 'Coppers\'s port',
-      default: 9115
-    })
-    .option('route-prefix', {
-      type: 'string',
-      default: '/wd/hub/',
-      description: 'Run with verbose logging'
-    })
-    .argv;
+  .command('standalone', 'start a Copper standalone server')
+  .command('node', 'start a Copper node', yargs => yargs.option('config', { describe: 'node configuration file', type: 'string' }))
+  .command('hub', 'start a Copper hub', yargs => yargs.option('config', { describe: 'hub configuration file', type: 'string' }))
+  .option('port', {
+    describe: 'Coppers\'s port',
+    default: 9115
+  })
+  .option('route-prefix', {
+    type: 'string',
+    default: '/wd/hub/',
+    description: 'Run with verbose logging'
+  })
+  .argv;
 
+const ServerFactory = {
+  standalone: StandaloneServer,
+  node: NodeServer,
+  hub: HubServer,
+} as const;
 
-    (async () => {
-        try {
-          const _args = await args;
-          if (!_args._ || !_args._.length) {
-            throw new Error('Please run node index.js serve --port=PORT');
-          }
-          
-          const server = new StandaloneServer(_args.port as number, _args["route-prefix"]);
-          await server.listen();
-          logger.info('Copper up and listening on port', { port: _args.port });
-        } catch (e) {
-          logger.error(e);
-        }
-    })();
+const parseConfig = (config?: string) => {
+  try {
+    return config ? JSON.parse(fs.readFileSync(config, 'utf-8')) : {};
+  } catch (err) {
+    throw new Error('configuration is invalid');
+  }
+}
+
+(async () => {
+  try {
+    const _args = await args;
+
+    const command = _args._[0] as keyof typeof ServerFactory || 'standalone';
+    const config = parseConfig(_args.config);
+    const port: number = config.port || _args.port;
+
+    const server = new ServerFactory[command](port, _args["route-prefix"], config);
+    await server.listen();
+    logger.info(`Copper ${command} up and listening on port ${port}`);
+  } catch (e) {
+    logger.error(e);
+  }
+})();

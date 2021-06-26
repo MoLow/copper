@@ -1,0 +1,7 @@
+{
+    "port": "9116",
+    "hubHost": "localhost",
+    "hubPort": "9115",
+    "maxSession": 5,
+    "nodePolling": 10000
+}

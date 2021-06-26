@@ -5,17 +5,16 @@ import * as stream from 'stream';
 import * as unzipper from 'unzipper';
 import * as mkdirp from 'mkdirp';
 import * as uuid from 'uuid';
-import * as WebSocket from 'ws';
 import { launch, Options, LaunchedChrome } from 'chrome-launcher';
 import { logger } from '../logger';
-import { CreateSessionError, SessionNotFound } from '../errors';
+import { CreateSessionError, SessionNotFound } from '../common/errors';
 import fetch from 'node-fetch';
 
 export type SessionOptions = Omit<Options, 'handleSIGINT'>;
 
 export interface Session {
     chrome: LaunchedChrome,
-    webSocket: WebSocket;
+    wsUrl: string;
     wsInfo: { Browser: string, "Protocol-Version": string, "User-Agent": string, "V8-Version": string, "WebKit-Version": string, webSocketDebuggerUrl: string }
 }
 
@@ -25,6 +24,8 @@ type desiredCapabilities = Partial<Record<typeof chomreOptionsPath[number], {
     args?: Array<string>;
     extensions?: Array<string>
 }>>;
+
+export type serializedSession = Session['wsInfo'] & { id: string, port: number, pid: number };
 
 export class SessionManager {
     private sessions = new Map<string, Session>();
@@ -102,26 +103,23 @@ export class SessionManager {
 
             const chrome = await launch(options);
             const wsInfo = await fetch(`http://localhost:${chrome.port}/json/version`).then(res => res.json());
-            const webSocket = new WebSocket(wsInfo.webSocketDebuggerUrl, { timeout: 5000 });
-            const session = { chrome , wsInfo, webSocket }
+            const wsUrl = wsInfo.webSocketDebuggerUrl;
+            const session = { chrome , wsInfo, wsUrl }
             this.sessions.set(id, session);
             return this.serializeSession(id, session);
         } catch (err) {
-            logger.error('error creating a session', { err, id });
+            logger.error({ err, id }, 'error creating a session');
             throw new CreateSessionError(err);
         }
     }
 
     async removeSession(id: string) {
-        if (!this.sessions.has(id)) {
-            throw new SessionNotFound(id);
-        }
+        this.getSession(id); // throw if no session
         try {
             const session = this.sessions.get(id)!;
-            await session.webSocket.close();
             await session.chrome.kill();
         } catch (err) {
-            logger.error('error removing a session', { err, id });
+            logger.error({ err, id }, 'error removing a session');
         } finally {
             this.sessions.delete(id);
         }
@@ -136,13 +134,10 @@ export class SessionManager {
         return this.serializeSession(id, session);
     }
 
-    getWSServer(id: string) {
-        if (!this.sessions.has(id)) {
-            throw new SessionNotFound(id);
-        }
-
+    getWebSocketUrl(id: string) {
+        this.getSession(id); // throw if no session
         const session = this.sessions.get(id)!;
-        return session.webSocket;
+        return session.wsUrl;
     }
 
     listSessions() {
