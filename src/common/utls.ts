@@ -15,3 +15,4 @@ export const removeWsUrl = <T>(session: T) => {
         'goog:chromeOptions': undefined,
     });
 }
+export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));

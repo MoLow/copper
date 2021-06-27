@@ -1,6 +1,8 @@
 import { NodeConfig } from "../grid/grid";
 import { StandaloneServer } from "../standalone/server";
 import fetch from 'node-fetch';
+import { logger } from "../logger";
+import { delay } from "../common/utls";
 
 export class NodeServer extends StandaloneServer {
     constructor(port: number, routesPrefix: string, private config: NodeConfig) {
@@ -8,16 +10,40 @@ export class NodeServer extends StandaloneServer {
     }
     async listen() {
         const result = await super.listen();
-        await fetch(`http://${this.config.hubHost}:${this.config.hubPort}/grid/node`, {
-            method: 'POST',
-            body: JSON.stringify({ config: this.config }),
-            headers: { 'Content-Type': 'application/json' }
-        });
+        await this.register();
         return result;
     }
     async stop() {
         const result = await super.stop();
-        await fetch(`http://${this.config.hubHost}:${this.config.hubPort}/grid/node`, { method: 'DELETE' });
+        await this.deregister();
         return result;
+    }
+    async register(retries = 50) {
+        try {
+            await fetch(`http://${this.config.hubHost}:${this.config.hubPort}/grid/node`, {
+                method: 'POST',
+                body: JSON.stringify({ config: this.config }),
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (err) {
+            if(retries <= 0) {
+                throw err;
+            }
+            logger.error('error registering node. retrying in 5 seconds');
+            await delay(5000);
+            process.nextTick(() => this.register(retries - 1));
+        }
+    }
+    async deregister(retries = 50) {
+        try {
+            await fetch(`http://${this.config.hubHost}:${this.config.hubPort}/grid/node`, { method: 'DELETE' });
+        } catch (err) {
+            if(retries <= 0) {
+                throw err;
+            }
+            logger.error('error deregistering node. retrying in 5 seconds');
+            await delay(5000);
+            process.nextTick(() => this.deregister(retries - 1));
+        }
     }
 };

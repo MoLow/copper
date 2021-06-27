@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import { NoMatchingNode, SessionNotFound } from "../common/errors";
-import { removeWsUrl } from '../common/utls';
+import { delay, removeWsUrl } from '../common/utls';
+import { logger } from '../logger';
 import { serializedSession } from '../standalone/sessionManager';
 
 export interface NodeConfig {
@@ -15,12 +16,14 @@ export interface NodeConfig {
 
 export class Node {
     private sessions = new Set<string>();
+    private isAlive = false;
 
     constructor(private config: NodeConfig) {
         this.config.maxSession = this.config.maxSession ?? Number.POSITIVE_INFINITY;
         if(this.config.maxSession === 1) {
             this.config.maxSession = Number.POSITIVE_INFINITY;
         }
+        this.checkIsAlive();
     };
 
     static getId(config: Pick<NodeConfig, 'host' | 'port'>) {
@@ -43,7 +46,7 @@ export class Node {
     }
     
     get canCreateSession() {
-        return this.freeSlots > 0;
+        return this.freeSlots > 0 && this.isAlive;
     }
 
     getSessions() {
@@ -56,6 +59,23 @@ export class Node {
 
     deregisterSession(id: string) {
         this.sessions.delete(id);
+    }
+    private async checkIsAlive() {
+        try {
+            await fetch(`${this.URL}/wd/hub/status`, { timeout: 1000 });
+            if (!this.isAlive) {
+                logger.warn(`grid ${this.id} connected`);
+            }
+            this.isAlive = true;
+        } catch (err) {
+            if (this.isAlive) {
+                logger.warn(`grid ${this.id} disconnected`);
+            }
+            this.isAlive = false;
+        }
+        await delay(this.config.nodePolling || 10000);
+        process.nextTick(() => this.checkIsAlive());
+
     }
 }
 
@@ -82,11 +102,12 @@ export class Grid {
     }
 
     async createSession(body: string) {
-        const node = Array.from(this.nodes.values())
-            .filter((node) => node.canCreateSession)
-            .reduce((prev, curr) => curr.freeSlots > prev.freeSlots ? curr : prev);
+        const candidates = Array.from(this.nodes.values()).filter((node) => node.canCreateSession);
+        const node = candidates.length ? 
+            candidates.reduce((prev, curr) => curr.freeSlots > prev.freeSlots ? curr : prev) :
+            null;
 
-        if(!node) {
+        if (!node) {
             throw new NoMatchingNode('cannot find a free node to create a session on');
         }
 
