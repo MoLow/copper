@@ -72,6 +72,7 @@ export class SessionManager {
     }
     
     private async handleExtensions(desiredCapabilities: desiredCapabilities, sessionId: string) {
+        // https://github.com/chromium/chromium/blob/d7da0240cae77824d1eda25745c4022757499131/chrome/test/chromedriver/chrome_launcher.cc#L905
         const chromeOptions = this.getChromeOptions(desiredCapabilities);
         if (!chromeOptions?.extensions?.length) {
             return;
@@ -87,6 +88,7 @@ export class SessionManager {
     }
 
     private async handleChromeProfile(desiredCapabilities: desiredCapabilities, sessionId: string) {
+        // https://github.com/chromium/chromium/blob/d7da0240cae77824d1eda25745c4022757499131/chrome/test/chromedriver/chrome_launcher.cc#L1096
         const profilePath = path.join(os.tmpdir(), 'puppeteer_dev_chrome_profile-');
         await mkdirp(profilePath);
     }
