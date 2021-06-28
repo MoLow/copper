@@ -1,7 +1,6 @@
 import * as puppeteer from 'puppeteer';
 import { expect } from 'chai';
 import { StandaloneServer } from '../src/standalone/server';
-import { delay } from '../src/common/utils';
 
 const PORT = 9115;
 
@@ -34,7 +33,6 @@ describe('standalone e2e', () => {
 
     after(async () => {
         await browser.close();
-        await delay(500);
         await server.stop();
     });
 });
