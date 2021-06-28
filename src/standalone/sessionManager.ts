@@ -13,6 +13,8 @@ import { IWebSocketHandler } from '../common/websockets';
 
 export type SessionOptions = Omit<Options, 'handleSIGINT'>;
 
+export type CreateSessionArgs = { chromeOptions?: SessionOptions; desiredCapabilities?: any };
+
 export interface Session {
     chrome: LaunchedChrome;
     wsUrl: string;
@@ -26,11 +28,11 @@ export interface Session {
     };
 }
 
-const chomreOptionsPath = ['chromeOptions', 'goog:chromeOptions'] as const;
+const chromeOptionsPath = ['chromeOptions', 'goog:chromeOptions'] as const;
 
 type desiredCapabilities = Partial<
     Record<
-        typeof chomreOptionsPath[number],
+        typeof chromeOptionsPath[number],
         {
             args?: Array<string>;
             extensions?: Array<string>;
@@ -116,20 +118,16 @@ export class SessionManager implements IWebSocketHandler {
         await mkdirp(profilePath);
     }
 
-    async createSession(opts: SessionOptions = {}, desiredCapabilities: desiredCapabilities = {}) {
+    async createSession({ chromeOptions = {}, desiredCapabilities = {} }: CreateSessionArgs = {}) {
         const id = uuid.v4().toUpperCase();
 
         try {
             await this.handleExtensions(desiredCapabilities, id);
+            const w3cArgs = [...(this.getChromeOptions(desiredCapabilities)?.args || [])];
             const options: SessionOptions = Object.assign(
                 {},
-                opts,
-                desiredCapabilities
-                    ? {
-                          chromeFlags: [...(this.getChromeOptions(desiredCapabilities)?.args || [])],
-                          ignoreDefaultFlags: true,
-                      }
-                    : {},
+                chromeOptions,
+                w3cArgs.length ? { chromeFlags: w3cArgs, ignoreDefaultFlags: true } : {},
             );
 
             const chrome = await launch(options);

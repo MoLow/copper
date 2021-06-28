@@ -15,7 +15,7 @@ export const registerSessionRoutes: FastifyPluginCallback = (app, opts, done) =>
     });
 
     app.post<{ Body: Record<string, unknown> }>('/session', async (req) => {
-        const session = await grid.createSession(JSON.stringify(req.body));
+        const session = await grid.createSession(req.body);
         const value = addWsUrl(req, session);
         return { status: 0, value, sessionId: session.id };
     });

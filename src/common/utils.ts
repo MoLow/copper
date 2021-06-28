@@ -1,5 +1,6 @@
-import { FastifyRequest } from 'fastify';
 import * as pino from 'pino';
+import { FastifyRequest } from 'fastify';
+import { SessionOptions } from '../standalone/sessionManager';
 
 export const addWsUrl = (req: FastifyRequest, session: { id: string }) => {
     return Object.assign({}, session, {
@@ -24,4 +25,5 @@ export interface ICopperServerConfig {
     port: number;
     routesPrefix?: string;
     logLevel?: pino.LevelWithSilent;
+    defaultSessionOptions?: SessionOptions;
 }

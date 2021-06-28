@@ -13,7 +13,11 @@ describe('grid e2e', () => {
     let page: puppeteer.Page;
 
     before(async () => {
-        hub = new HubServer({ port: HUB_PORT, logLevel: 'silent' });
+        hub = new HubServer({
+            port: HUB_PORT,
+            logLevel: 'silent',
+            defaultSessionOptions: { chromeFlags: ['--headless', '--disable-gpu'] },
+        });
         node = new NodeServer(
             { port: NODE_PORT, logLevel: 'silent' },
             { hubHost: 'localhost', hubPort: HUB_PORT, port: NODE_PORT, maxSession: 1, nodePolling: 5000 },

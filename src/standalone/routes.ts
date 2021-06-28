@@ -1,7 +1,7 @@
 import { FastifyPluginCallback } from 'fastify';
 import { UnsupportedActionError } from '../common/errors';
 import { addWsUrl } from '../common/utils';
-import { sessionManager, SessionOptions } from './sessionManager';
+import { CreateSessionArgs, sessionManager } from './sessionManager';
 
 export type withSessionId = { Params: { sessionId: string } };
 
@@ -19,8 +19,8 @@ export const registerRoutes: FastifyPluginCallback<{ throwOnUnsupportedAction: b
         return { statue: 0, value };
     });
 
-    app.post<{ Body: { chromeOptions?: SessionOptions; desiredCapabilities?: any } }>('/session', async (req) => {
-        const session = await sessionManager.createSession(req.body?.chromeOptions, req.body?.desiredCapabilities);
+    app.post<{ Body: CreateSessionArgs }>('/session', async (req) => {
+        const session = await sessionManager.createSession(req.body);
         const value = addWsUrl(req, session);
         return { status: 0, value, sessionId: session.id };
     });

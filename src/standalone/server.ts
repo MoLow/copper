@@ -9,7 +9,7 @@ export class StandaloneServer {
     private app: FastifyInstance;
     private port: number;
 
-    constructor({ port, routesPrefix, logLevel }: ICopperServerConfig) {
+    constructor({ port, routesPrefix, logLevel, defaultSessionOptions }: ICopperServerConfig) {
         this.port = port;
         this.app = fastify({ logger: { level: logLevel }, bodyLimit: 1024 * 1024 * 100 });
 
@@ -18,7 +18,7 @@ export class StandaloneServer {
             throwOnUnsupportedAction: false,
             port: this.port,
         });
-        this.app.register(registerWebsocket, sessionManager);
+        this.app.register(registerWebsocket, { handler: sessionManager, defaultSessionOptions });
         this.app.register(registerErrorHandler);
     }
     async listen() {

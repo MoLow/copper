@@ -120,7 +120,7 @@ export class Grid implements IWebSocketHandler {
         logger.info(`deregistered node ${node.id}`);
     }
 
-    async createSession(body = '{}') {
+    async createSession(body = {}) {
         const candidates = Array.from(this.nodes.values()).filter((node) => node.canCreateSession);
         const node = candidates.length
             ? candidates.reduce((prev, curr) => (curr.freeSlots > prev.freeSlots ? curr : prev))
@@ -134,7 +134,7 @@ export class Grid implements IWebSocketHandler {
             `${node.URL}${node.urlPrefix}session`,
             {
                 method: 'POST',
-                body,
+                body: JSON.stringify(body),
                 headers: { 'Content-Type': 'application/json' },
             },
         ).then((res) => res.json());

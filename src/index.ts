@@ -16,7 +16,7 @@ const args = yargs(hideBin(process.argv))
         yargs.option('config', { describe: 'hub configuration file', type: 'string' }),
     )
     .option('port', {
-        describe: "Coppers's port",
+        describe: "Copper's port",
         default: 9115,
     })
     .option('route-prefix', {

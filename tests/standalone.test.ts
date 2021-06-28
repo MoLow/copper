@@ -10,7 +10,11 @@ describe('standalone e2e', () => {
     let page: puppeteer.Page;
 
     before(async () => {
-        server = new StandaloneServer({ port: PORT, logLevel: 'silent' });
+        server = new StandaloneServer({
+            port: PORT,
+            logLevel: 'silent',
+            defaultSessionOptions: { chromeFlags: ['--headless', '--disable-gpu'] },
+        });
         await server.listen();
         browser = await puppeteer.connect({ browserWSEndpoint: `ws://localhost:${PORT}` });
         page = (await browser.pages())[0];

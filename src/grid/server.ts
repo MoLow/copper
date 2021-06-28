@@ -11,14 +11,14 @@ export class HubServer {
     private app: FastifyInstance;
     private port: number;
 
-    constructor({ port, routesPrefix, logLevel }: ICopperServerConfig) {
+    constructor({ port, routesPrefix, logLevel, defaultSessionOptions }: ICopperServerConfig) {
         this.port = port;
         this.app = fastify({ logger: { level: logLevel }, bodyLimit: 1024 * 1024 * 100 });
 
         this.app.register(registerSessionRoutes, { prefix: routesPrefix ?? DEFAULT_URL_PREFIX });
         this.app.register(registerSessionProxy, { prefix: routesPrefix ?? DEFAULT_URL_PREFIX });
         this.app.register(registerGridRoutes, { prefix: '/grid/' });
-        this.app.register(registerWebsocket, grid);
+        this.app.register(registerWebsocket, { handler: grid, defaultSessionOptions });
         this.app.register(registerErrorHandler);
     }
     async listen() {
