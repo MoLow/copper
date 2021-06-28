@@ -2,6 +2,7 @@ import * as puppeteer from 'puppeteer';
 import { expect } from 'chai';
 import { NodeServer } from '../src/node/server';
 import { HubServer } from '../src/grid/server';
+import { delay } from '../src/common/utils';
 
 const NODE_PORT = 9116;
 const HUB_PORT = 9115;
@@ -41,6 +42,7 @@ describe('grid e2e', () => {
 
     after(async () => {
         await browser.close();
+        await delay(500);
         await node.stop();
         await hub.stop();
     });
