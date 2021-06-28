@@ -1,8 +1,8 @@
-import { NodeConfig } from "../grid/grid";
-import { StandaloneServer } from "../standalone/server";
+import { NodeConfig } from '../grid/grid';
+import { StandaloneServer } from '../standalone/server';
 import fetch from 'node-fetch';
-import { logger } from "../logger";
-import { delay, ICopperServerConfig } from "../common/utils";
+import { logger } from '../logger';
+import { delay, ICopperServerConfig } from '../common/utils';
 
 export class NodeServer extends StandaloneServer {
     constructor(serverConfig: ICopperServerConfig, private config: NodeConfig) {
@@ -23,10 +23,10 @@ export class NodeServer extends StandaloneServer {
             await fetch(`http://${this.config.hubHost}:${this.config.hubPort}/grid/node`, {
                 method: 'POST',
                 body: JSON.stringify({ config: this.config }),
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             });
         } catch (err) {
-            if(retries <= 0) {
+            if (retries <= 0) {
                 throw err;
             }
             logger.error('error registering node. retrying in 5 seconds');
@@ -39,10 +39,10 @@ export class NodeServer extends StandaloneServer {
             await fetch(`http://${this.config.hubHost}:${this.config.hubPort}/grid/node`, {
                 method: 'DELETE',
                 body: JSON.stringify({ config: this.config }),
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
             });
         } catch (err) {
-            if(retries <= 0) {
+            if (retries <= 0) {
                 throw err;
             }
             logger.error('error deregistering node. retrying in 5 seconds');
@@ -50,4 +50,4 @@ export class NodeServer extends StandaloneServer {
             process.nextTick(() => this.deregister(retries - 1));
         }
     }
-};
+}

@@ -9,24 +9,41 @@ import { launch, Options, LaunchedChrome } from 'chrome-launcher';
 import { logger } from '../logger';
 import { CreateSessionError, SessionNotFound } from '../common/errors';
 import fetch from 'node-fetch';
-import { IWebSocketHandler } from '../common/websockes';
+import { IWebSocketHandler } from '../common/websockets';
 
 export type SessionOptions = Omit<Options, 'handleSIGINT'>;
 
 export interface Session {
-    chrome: LaunchedChrome,
+    chrome: LaunchedChrome;
     wsUrl: string;
-    wsInfo: { Browser: string, "Protocol-Version": string, "User-Agent": string, "V8-Version": string, "WebKit-Version": string, webSocketDebuggerUrl: string }
+    wsInfo: {
+        Browser: string;
+        'Protocol-Version': string;
+        'User-Agent': string;
+        'V8-Version': string;
+        'WebKit-Version': string;
+        webSocketDebuggerUrl: string;
+    };
 }
 
 const chomreOptionsPath = ['chromeOptions', 'goog:chromeOptions'] as const;
 
-type desiredCapabilities = Partial<Record<typeof chomreOptionsPath[number], { 
-    args?: Array<string>;
-    extensions?: Array<string>
-}>>;
+type desiredCapabilities = Partial<
+    Record<
+        typeof chomreOptionsPath[number],
+        {
+            args?: Array<string>;
+            extensions?: Array<string>;
+        }
+    >
+>;
 
-export type serializedSession = Session['wsInfo'] & { id: string, port: number, pid: number, webSocketDebuggerUrl: never };
+export type serializedSession = Session['wsInfo'] & {
+    id: string;
+    port: number;
+    pid: number;
+    webSocketDebuggerUrl: never;
+};
 
 export class SessionManager implements IWebSocketHandler {
     private sessions = new Map<string, Session>();
@@ -40,7 +57,7 @@ export class SessionManager implements IWebSocketHandler {
             port: session.chrome.port,
             pid: session.chrome.pid,
             webSocketDebuggerUrl: undefined as never,
-        }
+        };
     }
 
     private getChromeOptions(desiredCapabilities: desiredCapabilities) {
@@ -55,23 +72,25 @@ export class SessionManager implements IWebSocketHandler {
             return this.extensions.get(checksum);
         }
 
-        const promise = this.extensionsPending.get(checksum) || new Promise<string>((resolve, reject) => {
-            const file = path.join(directory, uuid.v4().toUpperCase());
-            const readStream = stream.Readable.from(data);
-            logger.info(`writing extension to ${file}`);
-            readStream
-                .pipe(unzipper.Extract({ path: file }))
-                .on('error', err => reject(err))
-                .on('finish', () => {
-                    this.extensions.set(checksum, file);
-                    this.extensionsPending.delete(checksum)
-                    resolve(file);
-                })
-        });
+        const promise =
+            this.extensionsPending.get(checksum) ||
+            new Promise<string>((resolve, reject) => {
+                const file = path.join(directory, uuid.v4().toUpperCase());
+                const readStream = stream.Readable.from(data);
+                logger.info(`writing extension to ${file}`);
+                readStream
+                    .pipe(unzipper.Extract({ path: file }))
+                    .on('error', (err) => reject(err))
+                    .on('finish', () => {
+                        this.extensions.set(checksum, file);
+                        this.extensionsPending.delete(checksum);
+                        resolve(file);
+                    });
+            });
         this.extensionsPending.set(checksum, promise);
         return await promise;
     }
-    
+
     private async handleExtensions(desiredCapabilities: desiredCapabilities, sessionId: string) {
         // https://github.com/chromium/chromium/blob/d7da0240cae77824d1eda25745c4022757499131/chrome/test/chromedriver/chrome_launcher.cc#L905
         const chromeOptions = this.getChromeOptions(desiredCapabilities);
@@ -81,11 +100,14 @@ export class SessionManager implements IWebSocketHandler {
         const extDir = path.join(os.tmpdir(), sessionId);
         await mkdirp(extDir);
         chromeOptions.args = chromeOptions.args || [];
-        const extensions: string[] =  desiredCapabilities?.chromeOptions?.extensions || [];
-        await Promise.all(extensions.map(extension => this
-            .saveExtensionLocally(extension, extDir)
-            .then(file => chromeOptions.args!.push(`--load-extension=${file}`))
-        ));
+        const extensions: string[] = desiredCapabilities?.chromeOptions?.extensions || [];
+        await Promise.all(
+            extensions.map((extension) =>
+                this.saveExtensionLocally(extension, extDir).then((file) =>
+                    chromeOptions.args!.push(`--load-extension=${file}`),
+                ),
+            ),
+        );
     }
 
     private async handleChromeProfile(desiredCapabilities: desiredCapabilities, sessionId: string) {
@@ -96,18 +118,24 @@ export class SessionManager implements IWebSocketHandler {
 
     async createSession(opts: SessionOptions = {}, desiredCapabilities: desiredCapabilities = {}) {
         const id = uuid.v4().toUpperCase();
-        
+
         try {
             await this.handleExtensions(desiredCapabilities, id);
-            const options: SessionOptions = Object.assign({}, opts, desiredCapabilities ? {
-                chromeFlags: [ ...this.getChromeOptions(desiredCapabilities)?.args || [] ],
-                ignoreDefaultFlags: true,
-            } : {});
+            const options: SessionOptions = Object.assign(
+                {},
+                opts,
+                desiredCapabilities
+                    ? {
+                          chromeFlags: [...(this.getChromeOptions(desiredCapabilities)?.args || [])],
+                          ignoreDefaultFlags: true,
+                      }
+                    : {},
+            );
 
             const chrome = await launch(options);
-            const wsInfo = await fetch(`http://localhost:${chrome.port}/json/version`).then(res => res.json());
+            const wsInfo = await fetch(`http://localhost:${chrome.port}/json/version`).then((res) => res.json());
             const wsUrl = wsInfo.webSocketDebuggerUrl;
-            const session = { chrome , wsInfo, wsUrl }
+            const session = { chrome, wsInfo, wsUrl };
             this.sessions.set(id, session);
             return this.serializeSession(id, session);
         } catch (err) {

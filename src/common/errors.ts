@@ -3,16 +3,15 @@ import { FastifyPluginCallback } from 'fastify';
 import { logger } from '../logger';
 
 export class BaseError {
-    constructor (...args: any[]) {
-      Error.apply(this, args as any);
+    constructor(...args: any[]) {
+        Error.apply(this, args as any);
     }
 }
 BaseError.prototype = new Error();
 
-
 export class CopperError extends BaseError {
     /**
-     * 
+     *
      * @param {string} message - error message (usually same as error)
      * @param {string} error  - a constant message (e.g entity not found)
      * @param {number} statusCode
@@ -20,12 +19,12 @@ export class CopperError extends BaseError {
     constructor(public message: string | Error, public error: string, public statusCode = StatusCodes.BAD_REQUEST) {
         super(message);
     }
-  
+
     toJSON() {
-      return {
-        message: this.message,
-        error: this.error
-      };
+        return {
+            message: this.message,
+            error: this.error,
+        };
     }
 }
 
@@ -55,15 +54,15 @@ export class NoMatchingNode extends CopperError {
 
 export const registerErrorHandler: FastifyPluginCallback = (app, opts, done) => {
     app.setErrorHandler(async function (error, request, reply) {
-        if(error instanceof CopperError) {
+        if (error instanceof CopperError) {
             reply
                 .code(error.statusCode)
-                .serializer((a :string) => a)
-                .header("content-type", "application/json; charset=utf-8")
+                .serializer((a: string) => a)
+                .header('content-type', 'application/json; charset=utf-8')
                 .send(JSON.stringify(error));
         }
-        logger.error("Request Error", error.message, error.stack);
+        logger.error('Request Error', error.message, error.stack);
         reply.send(500);
     });
     done();
-  };
+};

@@ -1,21 +1,20 @@
-import fastify, { FastifyInstance } from "fastify";
-import { registerSessionRoutes } from "./sessionRoutes";
-import { registerWebsocket } from "../common/websockes";
-import { registerErrorHandler } from "../common/errors";
-import { registerGridRoutes } from "./gridRoutes";
-import { grid } from "./grid";
-import { registerSessionProxy } from "./sessionProxy";
-import { DEFAULT_URL_PREFIX, ICopperServerConfig } from "../common/utils";
-
+import fastify, { FastifyInstance } from 'fastify';
+import { registerSessionRoutes } from './sessionRoutes';
+import { registerWebsocket } from '../common/websockets';
+import { registerErrorHandler } from '../common/errors';
+import { registerGridRoutes } from './gridRoutes';
+import { grid } from './grid';
+import { registerSessionProxy } from './sessionProxy';
+import { DEFAULT_URL_PREFIX, ICopperServerConfig } from '../common/utils';
 
 export class HubServer {
     private app: FastifyInstance;
     private port: number;
 
-    constructor({  port, routesPrefix, logLevel }: ICopperServerConfig) {
+    constructor({ port, routesPrefix, logLevel }: ICopperServerConfig) {
         this.port = port;
         this.app = fastify({ logger: { level: logLevel }, bodyLimit: 1024 * 1024 * 100 });
-        
+
         this.app.register(registerSessionRoutes, { prefix: routesPrefix ?? DEFAULT_URL_PREFIX });
         this.app.register(registerSessionProxy, { prefix: routesPrefix ?? DEFAULT_URL_PREFIX });
         this.app.register(registerGridRoutes, { prefix: '/grid/' });
@@ -29,4 +28,4 @@ export class HubServer {
     async stop() {
         return await this.app.close();
     }
-};
+}

@@ -1,22 +1,25 @@
-import { FastifyPluginCallback } from "fastify";
-import { UnsupportedActionError } from "../common/errors";
-import { addWsUrl } from "../common/utils";
-import { sessionManager, SessionOptions } from "./sessionManager";
+import { FastifyPluginCallback } from 'fastify';
+import { UnsupportedActionError } from '../common/errors';
+import { addWsUrl } from '../common/utils';
+import { sessionManager, SessionOptions } from './sessionManager';
 
 export type withSessionId = { Params: { sessionId: string } };
 
-
-export const registerRoutes: FastifyPluginCallback<{ throwOnUnsupportedAction: boolean, port: number }> = (app, opts, done) => {
-    app.get('/status', async (req) => {
+export const registerRoutes: FastifyPluginCallback<{ throwOnUnsupportedAction: boolean; port: number }> = (
+    app,
+    opts,
+    done,
+) => {
+    app.get('/status', async () => {
         return { ready: true, message: 'Copper Is Ready' };
     });
-  
-    app.get('/sessions', async (req) => {
+
+    app.get('/sessions', async () => {
         const value = sessionManager.listSessions();
         return { statue: 0, value };
     });
 
-    app.post<{ Body: { chromeOptions?: SessionOptions, desiredCapabilities?: any } }>('/session', async (req) => {
+    app.post<{ Body: { chromeOptions?: SessionOptions; desiredCapabilities?: any } }>('/session', async (req) => {
         const session = await sessionManager.createSession(req.body?.chromeOptions, req.body?.desiredCapabilities);
         const value = addWsUrl(req, session);
         return { status: 0, value, sessionId: session.id };
@@ -27,12 +30,12 @@ export const registerRoutes: FastifyPluginCallback<{ throwOnUnsupportedAction: b
         return { status: 0, value, sessionId: value.id };
     });
 
-    app.delete<withSessionId>('/session/:sessionId', async (req, reply) => {
+    app.delete<withSessionId>('/session/:sessionId', async (req) => {
         await sessionManager.removeSession(req.params.sessionId);
         return { status: 0, value: null, sessionId: null, state: 'success' };
     });
 
-    app.all<withSessionId>('/session/:sessionId/*', async (req, reply) => {
+    app.all<withSessionId>('/session/:sessionId/*', async (req) => {
         if (opts.throwOnUnsupportedAction) {
             throw new UnsupportedActionError(`unsupported action: ${req.url}`);
         }
@@ -40,4 +43,4 @@ export const registerRoutes: FastifyPluginCallback<{ throwOnUnsupportedAction: b
     });
 
     done();
-}
+};
