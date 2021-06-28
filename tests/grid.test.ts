@@ -41,7 +41,7 @@ describe('grid e2e', () => {
 
     after(async () => {
         await browser.close();
-        await hub.stop();
         await node.stop();
+        await hub.stop();
     });
 });
