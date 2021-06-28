@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from "fastify";
 import { grid } from "./grid";
-import { addWsUrl } from '../common/utls';
+import { addWsUrl } from '../common/utils';
 
 export type withSessionId = { Params: { sessionId: string } };
 

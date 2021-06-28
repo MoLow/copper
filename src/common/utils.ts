@@ -1,4 +1,5 @@
 import { FastifyRequest } from "fastify";
+import * as pino from 'pino';
 
 export const addWsUrl = (req: FastifyRequest, session: { id: string }) => {
     return Object.assign({}, session, {
@@ -16,3 +17,11 @@ export const removeWsUrl = <T>(session: T) => {
     });
 }
 export const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+export const DEFAULT_URL_PREFIX = '/wd/hub/';
+
+export interface ICopperServerConfig {
+    port: number,
+    routesPrefix?: string,
+    logLevel?: pino.LevelWithSilent
+}

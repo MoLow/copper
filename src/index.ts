@@ -5,6 +5,7 @@ import { logger } from "./logger";
 import { StandaloneServer } from "./standalone/server";
 import { HubServer } from "./grid/server";
 import { NodeServer } from "./node/server";
+import { DEFAULT_URL_PREFIX } from "./common/utils";
 
 
 const args = yargs(hideBin(process.argv))
@@ -17,8 +18,11 @@ const args = yargs(hideBin(process.argv))
   })
   .option('route-prefix', {
     type: 'string',
-    default: '/wd/hub/',
+    default: DEFAULT_URL_PREFIX,
     description: 'Run with verbose logging'
+  })
+  .option('silent', {
+    type: 'boolean'
   })
   .argv;
 
@@ -43,8 +47,15 @@ const parseConfig = (config?: string) => {
     const command = _args._[0] as keyof typeof ServerFactory || 'standalone';
     const config = parseConfig(_args.config);
     const port: number = config.port || _args.port;
+    if(_args.silent) {
+      logger.level = 'silent';
+    }
 
-    const server = new ServerFactory[command](port, _args["route-prefix"], config);
+    const server = new ServerFactory[command]({ 
+      port, 
+      routesPrefix: _args["route-prefix"],
+      logLevel: _args.silent ? 'silent' : 'info',
+    }, config);
     await server.listen();
     logger.info(`Copper ${command} up and listening on port ${port}`);
   } catch (e) {

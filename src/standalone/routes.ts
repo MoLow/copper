@@ -1,6 +1,6 @@
 import { FastifyPluginCallback } from "fastify";
 import { UnsupportedActionError } from "../common/errors";
-import { addWsUrl } from "../common/utls";
+import { addWsUrl } from "../common/utils";
 import { sessionManager, SessionOptions } from "./sessionManager";
 
 export type withSessionId = { Params: { sessionId: string } };

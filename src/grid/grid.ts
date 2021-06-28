@@ -1,24 +1,28 @@
 import fetch from 'node-fetch';
 import { NoMatchingNode, SessionNotFound } from "../common/errors";
-import { delay, removeWsUrl } from '../common/utls';
+import { DEFAULT_URL_PREFIX, delay, removeWsUrl } from '../common/utils';
+import { IWebSocketHandler } from '../common/websockes';
 import { logger } from '../logger';
 import { serializedSession } from '../standalone/sessionManager';
 
 export interface NodeConfig {
     host?: string;
-    port?: string;
+    port: string | number;
     hubHost: string;
-    hubPort: string;
+    hubPort: string | number;
     maxSession: number;
     nodePolling: number;
+    urlPrefix?: string;
 }
 
 
 export class Node {
     private sessions = new Set<string>();
+    private shouldCheckIsAlive = true;
     private isAlive = false;
 
     constructor(private config: NodeConfig) {
+        this.config.urlPrefix = this.config.urlPrefix ?? DEFAULT_URL_PREFIX;
         this.config.maxSession = this.config.maxSession ?? Number.POSITIVE_INFINITY;
         if(this.config.maxSession === 1) {
             this.config.maxSession = Number.POSITIVE_INFINITY;
@@ -37,8 +41,14 @@ export class Node {
     get URL() {
         return `http://${this.config.host}:${this.config.port}`;
     }
+
     get webSocketURL() {
         return `ws://${this.config.host}:${this.config.port}`;
+    }
+
+
+    get urlPrefix() {
+        return this.config.urlPrefix;
     }
 
     get freeSlots() {
@@ -60,16 +70,24 @@ export class Node {
     deregisterSession(id: string) {
         this.sessions.delete(id);
     }
+
+    deregister() {
+        this.shouldCheckIsAlive = false;
+    }
+
     private async checkIsAlive() {
+        if (!this.shouldCheckIsAlive) {
+            return;
+        }
         try {
-            await fetch(`${this.URL}/wd/hub/status`, { timeout: 1000 });
+            await fetch(`${this.URL}${this.config.urlPrefix}status`, { timeout: 1000 });
             if (!this.isAlive) {
-                logger.warn(`grid ${this.id} connected`);
+                logger.warn(`node ${this.id} connected`);
             }
             this.isAlive = true;
         } catch (err) {
             if (this.isAlive) {
-                logger.warn(`grid ${this.id} disconnected`);
+                logger.warn(`node ${this.id} disconnected`);
             }
             this.isAlive = false;
         }
@@ -79,7 +97,7 @@ export class Node {
     }
 }
 
-export class Grid {
+export class Grid implements IWebSocketHandler {
     private nodes = new Map<string, Node>();
     private sessionNodeMap = new Map<string, string>();
     private sessions = new Map<string, serializedSession>();
@@ -87,21 +105,25 @@ export class Grid {
     registerNode(config: NodeConfig) {
         const node = new Node(config);
         this.nodes.set(node.id, node);
+        logger.info(`registered node ${node.id}`);
         return node;
     }
 
-    async deregisterNode(host: string, port: string) {
+    deregisterNode(host: string, port: string | number) {
         const nodeId = Node.getId({ host, port });
         if (!this.nodes.has(nodeId)) {
-            throw new NoMatchingNode(`node ${nodeId} not registerd`);
+            logger.error(`failed deregistering node ${nodeId}`);
+            throw new NoMatchingNode(`node ${nodeId} not registered`);
         }
 
         const node = this.nodes.get(nodeId)!;
         this.nodes.delete(nodeId);
+        node.deregister();
         node.getSessions().map(sessionId => this._removeSession(sessionId));
+        logger.info(`deregistered node ${node.id}`);
     }
 
-    async createSession(body: string) {
+    async createSession(body: string = '{}') {
         const candidates = Array.from(this.nodes.values()).filter((node) => node.canCreateSession);
         const node = candidates.length ? 
             candidates.reduce((prev, curr) => curr.freeSlots > prev.freeSlots ? curr : prev) :
@@ -111,7 +133,7 @@ export class Grid {
             throw new NoMatchingNode('cannot find a free node to create a session on');
         }
 
-        const session: { sessionId: string , value: serializedSession } = await fetch(`${node.URL}/wd/hub/session`, {
+        const session: { sessionId: string , value: serializedSession } = await fetch(`${node.URL}${node.urlPrefix}session`, {
             method: 'POST',
             body,
             headers: {'Content-Type': 'application/json'}
@@ -157,7 +179,7 @@ export class Grid {
         const node = this.getNode(sessionId);
         node.deregisterSession(sessionId);
         this._removeSession(sessionId);
-        return await fetch(`${node.URL}/wd/hub/session/${sessionId}`, {
+        await fetch(`${node.URL}${node.urlPrefix}session/${sessionId}`, {
             method: 'DELETE',
             headers: {'Content-Type': 'application/json'}
         }).then(res => res.json());

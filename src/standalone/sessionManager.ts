@@ -9,6 +9,7 @@ import { launch, Options, LaunchedChrome } from 'chrome-launcher';
 import { logger } from '../logger';
 import { CreateSessionError, SessionNotFound } from '../common/errors';
 import fetch from 'node-fetch';
+import { IWebSocketHandler } from '../common/websockes';
 
 export type SessionOptions = Omit<Options, 'handleSIGINT'>;
 
@@ -25,20 +26,20 @@ type desiredCapabilities = Partial<Record<typeof chomreOptionsPath[number], {
     extensions?: Array<string>
 }>>;
 
-export type serializedSession = Session['wsInfo'] & { id: string, port: number, pid: number };
+export type serializedSession = Session['wsInfo'] & { id: string, port: number, pid: number, webSocketDebuggerUrl: never };
 
-export class SessionManager {
+export class SessionManager implements IWebSocketHandler {
     private sessions = new Map<string, Session>();
     private extensions = new Map<string, string>();
     private extensionsPending = new Map<string, Promise<string>>();
 
-    private serializeSession(id: string, session: Session) {
+    private serializeSession(id: string, session: Session): serializedSession {
         return {
             ...session.wsInfo,
             id,
             port: session.chrome.port,
             pid: session.chrome.pid,
-            webSocketDebuggerUrl: undefined,
+            webSocketDebuggerUrl: undefined as never,
         }
     }
 
