@@ -99,9 +99,9 @@ export class SessionManager implements IWebSocketHandler {
         
         try {
             await this.handleExtensions(desiredCapabilities, id);
-            const options = Object.assign({}, opts, desiredCapabilities ? {
+            const options: SessionOptions = Object.assign({}, opts, desiredCapabilities ? {
                 chromeFlags: [ ...this.getChromeOptions(desiredCapabilities)?.args || [] ],
-                ignoreDefaultFlags: true
+                ignoreDefaultFlags: true,
             } : {});
 
             const chrome = await launch(options);
