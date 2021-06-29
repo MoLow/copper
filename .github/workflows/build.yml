@@ -1,7 +1,10 @@
 name: build project
-on: [push]
+on: 
+  push:
+    tags:
+      - 'v*'
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
