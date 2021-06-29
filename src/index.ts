@@ -1,3 +1,4 @@
+import 'make-promises-safe';
 import * as fs from 'fs';
 import * as yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';

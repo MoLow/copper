@@ -19,6 +19,9 @@ export const registerWebsocket: FastifyPluginCallback<WebSocketOptions> = (app, 
     const { handler, defaultSessionOptions } = opts;
     const defaultOpts = defaultSessionOptions ? { chromeOptions: defaultSessionOptions } : undefined;
     const proxy = httpProxy.createProxyServer({});
+
+    proxy.on('error', (err) => logger.error(err, 'websocket proxy error'));
+
     app.server.on('upgrade', async (req, socket, head) => {
         try {
             let [, sessionId] = req.url?.split('/ws/') || [];
