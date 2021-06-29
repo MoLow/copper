@@ -4,7 +4,9 @@
   "description": "A chromium grid",
   "main": "index.js",
   "scripts": {
-    "start": "node -r ts-node/register ./index.ts",
+    "build": "tsc",
+    "start-dev": "node -r ts-node/register ./index.ts",
+    "start": "node -r source-map-support/register ./index.js",
     "test": "LOG_ENABLED=false mocha",
     "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts' --quiet",
     "prepare": "husky install"
@@ -20,6 +22,7 @@
     "mkdirp": "^1.0.4",
     "node-fetch": "^2.6.1",
     "pino": "^6.11.3",
+    "source-map-support": "^0.5.19",
     "unzipper": "^0.10.11",
     "uuid": "^8.3.2",
     "yargs": "^17.0.1"
@@ -48,6 +51,7 @@
     "prettier": "^2.3.2",
     "puppeteer": "^10.0.0",
     "ts-node": "^10.0.0",
+    "tsc": "^2.0.3",
     "typescript": "^4.3.4"
   }
 }
