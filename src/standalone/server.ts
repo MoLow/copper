@@ -22,7 +22,7 @@ export class StandaloneServer {
         this.app.register(registerErrorHandler);
     }
     async listen() {
-        return await this.app.listen(this.port);
+        return await this.app.listen(this.port, '0.0.0.0');
     }
 
     async stop() {
