@@ -3,7 +3,7 @@ import { registerRoutes } from './routes';
 import { registerWebsocket } from '../common/websockets';
 import { sessionManager } from './sessionManager';
 import { registerErrorHandler } from '../common/errors';
-import { DEFAULT_URL_PREFIX, ICopperServerConfig } from '../common/utils';
+import { DEFAULT_URL_PREFIX, delay, ICopperServerConfig } from '../common/utils';
 
 export class StandaloneServer {
     private app: FastifyInstance;
@@ -26,6 +26,6 @@ export class StandaloneServer {
     }
 
     async stop() {
-        return await this.app.close();
+        return await Promise.race([this.app.close(), delay(5000)]);
     }
 }

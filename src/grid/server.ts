@@ -5,7 +5,7 @@ import { registerErrorHandler } from '../common/errors';
 import { registerGridRoutes } from './gridRoutes';
 import { grid } from './grid';
 import { registerSessionProxy } from './sessionProxy';
-import { DEFAULT_URL_PREFIX, ICopperServerConfig } from '../common/utils';
+import { DEFAULT_URL_PREFIX, delay, ICopperServerConfig } from '../common/utils';
 
 export class HubServer {
     private app: FastifyInstance;
@@ -26,6 +26,6 @@ export class HubServer {
     }
 
     async stop() {
-        return await this.app.close();
+        return await Promise.race([this.app.close(), delay(5000)]);
     }
 }

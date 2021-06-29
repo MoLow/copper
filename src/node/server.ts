@@ -46,7 +46,7 @@ export class NodeServer extends StandaloneServer {
                 throw err;
             }
             logger.error('error deregistering node. retrying in 5 seconds');
-            await delay(5000);
+            await delay(2500);
             process.nextTick(() => this.deregister(retries - 1));
         }
     }
