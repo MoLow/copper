@@ -26,6 +26,7 @@ jobs:
         run: |
           docker build -f docker/Dockerfile.base . -t copper/base \
           && docker build -f docker/Dockerfile.hub . -t copper/hub \
+          && docker build -f docker/Dockerfile.node-base . -t copper/node-base \
           && docker build -f docker/Dockerfile.node-headless . -t copper/node-headless \
           && docker build -f docker/Dockerfile.node . -t copper/node \
           && docker build -f docker/Dockerfile.standalone . -t copper/standalone \

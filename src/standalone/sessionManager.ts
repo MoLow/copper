@@ -5,14 +5,13 @@ import * as stream from 'stream';
 import * as unzipper from 'unzipper';
 import * as mkdirp from 'mkdirp';
 import * as uuid from 'uuid';
+import fetch from 'node-fetch';
 import { launch, Options, LaunchedChrome } from 'chrome-launcher';
 import { logger } from '../logger';
 import { CreateSessionError, SessionNotFound } from '../common/errors';
-import fetch from 'node-fetch';
 import { IWebSocketHandler } from '../common/websockets';
 
 export type SessionOptions = Omit<Options, 'handleSIGINT'>;
-
 export type CreateSessionArgs = { chromeOptions?: SessionOptions; desiredCapabilities?: any };
 
 export interface Session {

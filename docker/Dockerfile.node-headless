@@ -1,13 +1,14 @@
-FROM "copper/base"
+FROM "copper/node-base"
 
-ARG CHROME_VERSION="google-chrome-stable"
+USER root
 
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-  && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
-  && apt-get update -qqy \
-  && apt-get install --no-install-recommends -qqy ${CHROME_VERSION:-google-chrome-stable} \
-  && rm /etc/apt/sources.list.d/google-chrome.list \
+RUN apt-get update -qqy \
+  && apt-get install --no-install-recommends -qqy xvfb \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
-ENTRYPOINT ["npm", "start", "node"]
+COPY docker/wrap_chrome_binary_headless /opt/bin/wrap_chrome_binary_headless
+RUN /opt/bin/wrap_chrome_binary_headless
+
+# Run Chrome non-privileged
+USER chrome

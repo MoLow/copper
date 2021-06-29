@@ -1,6 +1,6 @@
 module.exports = {
     extension: ['ts', 'tsx'],
-    spec: ['tests/**.ts', 'src/**.ts'],
+    spec: ['tests/**.test.ts', 'src/**.test.ts'],
     loader: 'ts-node/esm',
     timeout: '30000',
 };

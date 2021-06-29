@@ -1,0 +1,30 @@
+FROM "copper/base"
+
+ARG CHROME_VERSION="google-chrome-stable"
+
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+  && apt-get update -qqy \
+  && apt-get install --no-install-recommends -qqy\
+    ${CHROME_VERSION:-google-chrome-stable} \
+    ca-certificates \
+	fontconfig \
+	fonts-ipafont-gothic \
+	fonts-wqy-zenhei \
+	fonts-thai-tlwg \
+	fonts-kacst \
+	fonts-symbola \
+	fonts-noto \
+	fonts-freefont-ttf \
+  && rm /etc/apt/sources.list.d/google-chrome.list \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+# Add Chrome as a user
+RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
+	&& mkdir -p /home/chrome && chown -R chrome:chrome /home/chrome
+
+# Run Chrome non-privileged
+USER chrome
+
+ENTRYPOINT ["npm", "start", "node"]

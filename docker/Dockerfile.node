@@ -1,6 +1,6 @@
-FROM "copper/node-headless"
+FROM "copper/node-base"
 
-ARG CHROME_VERSION="google-chrome-stable"
+USER root
 
 RUN apt-get update -qqy \
   && apt-get install --no-install-recommends -qqy xvfb \
@@ -9,3 +9,6 @@ RUN apt-get update -qqy \
 
 COPY docker/wrap_chrome_binary /opt/bin/wrap_chrome_binary
 RUN /opt/bin/wrap_chrome_binary
+
+# Run Chrome non-privileged
+USER chrome

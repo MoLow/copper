@@ -11,14 +11,18 @@ import { DEFAULT_URL_PREFIX } from './common/utils';
 const args = yargs(hideBin(process.argv))
     .command('standalone', 'start a Copper standalone server')
     .command('node', 'start a Copper node', (yargs) =>
-        yargs.option('config', { describe: 'node configuration file', type: 'string' }),
+        yargs.option('config', { describe: 'node configuration json file', type: 'string' }),
     )
     .command('hub', 'start a Copper hub', (yargs) =>
-        yargs.option('config', { describe: 'hub configuration file', type: 'string' }),
+        yargs.option('config', { describe: 'hub configuration json file', type: 'string' }),
     )
     .option('port', {
         describe: "Copper's port",
         default: 9115,
+    })
+    .option('default-session-options', {
+        describe: 'json file defining default options for a session created via websocket',
+        type: 'string',
     })
     .option('route-prefix', {
         type: 'string',
@@ -35,9 +39,9 @@ const ServerFactory = {
     hub: HubServer,
 } as const;
 
-const parseConfig = (config?: string) => {
+const parseJsonFile = (config?: string, fallback: any = {}) => {
     try {
-        return config ? JSON.parse(fs.readFileSync(config, 'utf-8')) : {};
+        return config ? JSON.parse(fs.readFileSync(config, 'utf-8')) : fallback;
     } catch (err) {
         throw new Error('configuration is invalid');
     }
@@ -48,7 +52,7 @@ const parseConfig = (config?: string) => {
         const _args = await args;
 
         const command = (_args._[0] as keyof typeof ServerFactory) || 'standalone';
-        const config = parseConfig(_args.config);
+        const config = parseJsonFile(_args.config);
         const port: number = config.port || _args.port;
         if (_args.silent) {
             logger.level = 'silent';
@@ -59,6 +63,7 @@ const parseConfig = (config?: string) => {
                 port,
                 routesPrefix: _args['route-prefix'],
                 logLevel: _args.silent ? 'silent' : 'info',
+                defaultSessionOptions: parseJsonFile(_args['default-session-options'], null),
             },
             config,
         );
