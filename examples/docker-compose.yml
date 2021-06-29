@@ -1,0 +1,14 @@
+version: '3'
+services:
+  node:
+    image: copper/node
+    volumes:
+      - ./nodeConfig.docker.json:/nodeConfig.json
+    command: "-- --config /nodeConfig.json"
+    depends_on:
+      - hub
+
+  hub:
+    image: copper/hub
+    ports:
+      - "9115:9115"

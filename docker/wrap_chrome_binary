@@ -1,0 +1,27 @@
+#!/bin/bash
+
+WRAPPER_PATH=$(readlink -f /usr/bin/google-chrome)
+BASE_PATH="$WRAPPER_PATH-base"
+mv "$WRAPPER_PATH" "$BASE_PATH"
+
+XVFB_WHD=1280x720x16
+DISPLAY_NUM=99
+
+cat > "$WRAPPER_PATH" <<_EOF
+#!/bin/bash
+# Note: exec -a below is a bashism.
+_kill_procs() {
+  kill -TERM $chromium
+  wait $chromium
+  kill -TERM $xvfb
+}
+trap _kill_procs SIGTERM
+Xvfb :$DISPLAY_NUM -screen 0 $XVFB_WHD -listen tcp -noreset -ac &
+xvfb=$!
+export DISPLAY=:$DISPLAY_NUM
+exec -a "\$0" "$BASE_PATH" --no-sandbox "\$@" &
+chromium=$!
+wait $chromium
+wait $xvfb
+_EOF
+chmod +x "$WRAPPER_PATH"

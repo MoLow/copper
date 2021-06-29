@@ -1,0 +1,11 @@
+FROM "copper/node-headless"
+
+ARG CHROME_VERSION="google-chrome-stable"
+
+RUN apt-get update -qqy \
+  && apt-get install --no-install-recommends -qqy xvfb \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+COPY docker/wrap_chrome_binary /opt/bin/wrap_chrome_binary
+RUN /opt/bin/wrap_chrome_binary

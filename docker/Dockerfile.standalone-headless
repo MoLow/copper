@@ -1,0 +1,3 @@
+FROM "copper/node-headless"
+
+ENTRYPOINT ["npm", "start", "standalone"]

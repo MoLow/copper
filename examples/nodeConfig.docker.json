@@ -1,0 +1,8 @@
+{
+    "host": "node",
+    "port": "9115",
+    "hubHost": "hub",
+    "hubPort": "9115",
+    "maxSession": 5,
+    "nodePolling": 10000
+}
