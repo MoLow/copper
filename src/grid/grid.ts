@@ -1,19 +1,11 @@
 import fetch from 'node-fetch';
 import { NoMatchingNode, SessionNotFound } from '../common/errors';
-import { DEFAULT_URL_PREFIX, delay, removeWsUrl } from '../common/utils';
+import { delay, removeWsUrl } from '../common/utils';
 import { IWebSocketHandler } from '../common/websockets';
 import { logger } from '../logger';
+import { NodeConfig } from '../node/config';
+import { copperConfig } from '../standalone/config';
 import { serializedSession } from '../standalone/sessionManager';
-
-export interface NodeConfig {
-    host?: string;
-    port: string | number;
-    hubHost: string;
-    hubPort: string | number;
-    maxSession: number;
-    nodePolling: number;
-    urlPrefix?: string;
-}
 
 export class Node {
     private sessions = new Set<string>();
@@ -21,7 +13,7 @@ export class Node {
     private isAlive = false;
 
     constructor(private config: NodeConfig) {
-        this.config.urlPrefix = this.config.urlPrefix ?? DEFAULT_URL_PREFIX;
+        this.config.urlPrefix = copperConfig.value.routesPrefix;
         this.config.maxSession = this.config.maxSession ?? Number.POSITIVE_INFINITY;
         if (this.config.maxSession === 1) {
             this.config.maxSession = Number.POSITIVE_INFINITY;

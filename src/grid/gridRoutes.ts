@@ -1,5 +1,6 @@
 import { FastifyPluginCallback } from 'fastify';
-import { grid, NodeConfig } from './grid';
+import { NodeConfig } from '../node/config';
+import { grid } from './grid';
 
 export const registerGridRoutes: FastifyPluginCallback = (app, opts, done) => {
     app.get('/status', async () => {

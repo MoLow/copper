@@ -1,11 +1,11 @@
-import { NodeConfig } from '../grid/grid';
-import { StandaloneServer } from '../standalone/server';
 import fetch from 'node-fetch';
+import { StandaloneServer } from '../standalone/server';
 import { logger } from '../logger';
 import { delay, ICopperServerConfig } from '../common/utils';
+import { nodeConfig } from './config';
 
 export class NodeServer extends StandaloneServer {
-    constructor(serverConfig: ICopperServerConfig, private config: NodeConfig) {
+    constructor(serverConfig: ICopperServerConfig) {
         super(serverConfig);
     }
     async listen() {
@@ -20,9 +20,9 @@ export class NodeServer extends StandaloneServer {
     }
     async register(retries = 50) {
         try {
-            await fetch(`http://${this.config.hubHost}:${this.config.hubPort}/grid/node`, {
+            await fetch(`http://${nodeConfig.value.hubHost}:${nodeConfig.value.hubPort}/grid/node`, {
                 method: 'POST',
-                body: JSON.stringify({ config: this.config }),
+                body: JSON.stringify({ config: nodeConfig.value }),
                 headers: { 'Content-Type': 'application/json' },
             });
         } catch (err) {
@@ -36,9 +36,9 @@ export class NodeServer extends StandaloneServer {
     }
     async deregister(retries = 3) {
         try {
-            await fetch(`http://${this.config.hubHost}:${this.config.hubPort}/grid/node`, {
+            await fetch(`http://${nodeConfig.value.hubHost}:${nodeConfig.value.hubPort}/grid/node`, {
                 method: 'DELETE',
-                body: JSON.stringify({ config: this.config }),
+                body: JSON.stringify({ config: nodeConfig.value }),
                 headers: { 'Content-Type': 'application/json' },
             });
         } catch (err) {

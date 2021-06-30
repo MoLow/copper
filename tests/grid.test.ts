@@ -2,6 +2,8 @@ import * as puppeteer from 'puppeteer';
 import { expect } from 'chai';
 import { NodeServer } from '../src/node/server';
 import { HubServer } from '../src/grid/server';
+import { copperConfig } from '../src/standalone/config';
+import { nodeConfig } from '../src/node/config';
 
 const NODE_PORT = 9116;
 const HUB_PORT = 9115;
@@ -13,15 +15,16 @@ describe('grid e2e', () => {
     let page: puppeteer.Page;
 
     before(async () => {
-        hub = new HubServer({
-            port: HUB_PORT,
-            logLevel: 'silent',
-            defaultSessionOptions: { chromeFlags: ['--headless', '--disable-gpu'] },
-        });
-        node = new NodeServer(
-            { port: NODE_PORT, logLevel: 'silent' },
-            { hubHost: 'localhost', hubPort: HUB_PORT, port: NODE_PORT, maxSession: 1, nodePolling: 5000 },
-        );
+        copperConfig.value = { defaultSessionOptions: { chromeFlags: ['--headless', '--disable-gpu'] } };
+        nodeConfig.value = {
+            hubHost: 'localhost',
+            hubPort: HUB_PORT,
+            port: NODE_PORT,
+            maxSession: 1,
+            nodePolling: 5000,
+        };
+        hub = new HubServer({ port: HUB_PORT, logLevel: 'silent' });
+        node = new NodeServer({ port: NODE_PORT, logLevel: 'silent' });
         await hub.listen();
         await node.listen();
         browser = await puppeteer.connect({ browserWSEndpoint: `ws://localhost:${HUB_PORT}` });

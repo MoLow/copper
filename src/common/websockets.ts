@@ -2,7 +2,8 @@ import * as httpProxy from 'http-proxy';
 import { FastifyPluginCallback } from 'fastify';
 import { withSessionId } from '../standalone/routes';
 import { logger } from '../logger';
-import { CreateSessionArgs, SessionOptions } from '../standalone/sessionManager';
+import { CreateSessionArgs } from '../standalone/sessionManager';
+import { copperConfig } from '../standalone/config';
 
 export interface IWebSocketHandler {
     getWebSocketUrl: (sessionId: string) => string;
@@ -10,14 +11,10 @@ export interface IWebSocketHandler {
     createSession: (options?: CreateSessionArgs) => Promise<{ id: string }>;
 }
 
-export interface WebSocketOptions {
-    handler: IWebSocketHandler;
-    defaultSessionOptions?: SessionOptions;
-}
-
-export const registerWebsocket: FastifyPluginCallback<WebSocketOptions> = (app, opts, done) => {
-    const { handler, defaultSessionOptions } = opts;
-    const defaultOpts = defaultSessionOptions ? { chromeOptions: defaultSessionOptions } : undefined;
+export const registerWebsocket: FastifyPluginCallback<IWebSocketHandler> = (app, handler, done) => {
+    const defaultOpts = copperConfig.value.defaultSessionOptions
+        ? { chromeOptions: copperConfig.value.defaultSessionOptions }
+        : undefined;
     const proxy = httpProxy.createProxyServer({});
 
     proxy.on('error', (err) => logger.error(err, 'websocket proxy error'));

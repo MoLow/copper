@@ -4,15 +4,11 @@ services:
     image: copper/node-headless
     volumes:
       - ./nodeConfig.json:/nodeConfig.json
-      - ./sessionDefaults.json:/sessionDefaults.json
     command: "-- --config /nodeConfig.json"
     depends_on:
       - hub
 
   hub:
     image: copper/hub
-    volumes:
-      - ./sessionDefaults.json:/sessionDefaults.json
-    command: "-- --default-session-options /sessionDefaults.json"
     ports:
       - "9115:9115"

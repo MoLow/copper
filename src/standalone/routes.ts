@@ -1,15 +1,12 @@
 import { FastifyPluginCallback } from 'fastify';
 import { UnsupportedActionError } from '../common/errors';
 import { addWsUrl } from '../common/utils';
+import { copperConfig } from './config';
 import { CreateSessionArgs, sessionManager } from './sessionManager';
 
 export type withSessionId = { Params: { sessionId: string } };
 
-export const registerRoutes: FastifyPluginCallback<{ throwOnUnsupportedAction: boolean; port: number }> = (
-    app,
-    opts,
-    done,
-) => {
+export const registerRoutes: FastifyPluginCallback = (app, opts, done) => {
     app.get('/status', async () => {
         return { ready: true, message: 'Copper Is Ready' };
     });
@@ -36,7 +33,7 @@ export const registerRoutes: FastifyPluginCallback<{ throwOnUnsupportedAction: b
     });
 
     app.all<withSessionId>('/session/:sessionId/*', async (req) => {
-        if (opts.throwOnUnsupportedAction) {
+        if (!copperConfig.value.enableW3CProtocol) {
             throw new UnsupportedActionError(`unsupported action: ${req.url}`);
         }
         return { status: 0, value: null, state: 'success' };

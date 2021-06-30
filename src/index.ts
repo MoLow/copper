@@ -6,69 +6,59 @@ import { logger } from './logger';
 import { StandaloneServer } from './standalone/server';
 import { HubServer } from './grid/server';
 import { NodeServer } from './node/server';
-import { DEFAULT_URL_PREFIX } from './common/utils';
+import { copperConfig } from './standalone/config';
+import { nodeConfig } from './node/config';
+import { gridConfig } from './grid/config';
 
 const args = yargs(hideBin(process.argv))
     .command('standalone', 'start a Copper standalone server')
-    .command('node', 'start a Copper node', (yargs) =>
-        yargs.option('config', { describe: 'node configuration json file', type: 'string' }),
-    )
-    .command('hub', 'start a Copper hub', (yargs) =>
-        yargs.option('config', { describe: 'hub configuration json file', type: 'string' }),
-    )
     .option('port', {
         describe: "Copper's port",
         default: 9115,
     })
-    .option('default-session-options', {
-        describe: 'json file defining default options for a session created via websocket',
+    .option('config', {
+        describe: 'configuration json file',
         type: 'string',
-    })
-    .option('route-prefix', {
-        type: 'string',
-        default: DEFAULT_URL_PREFIX,
-        description: 'Run with verbose logging',
     })
     .option('silent', {
         type: 'boolean',
-    }).argv;
+    })
+    .parseSync();
 
-const ServerFactory = {
-    standalone: StandaloneServer,
-    node: NodeServer,
-    hub: HubServer,
-} as const;
-
-const parseJsonFile = (config?: string, fallback: any = {}) => {
+const parseJsonFile = (config?: string) => {
     try {
-        return config ? JSON.parse(fs.readFileSync(config, 'utf-8')) : fallback;
+        return config ? JSON.parse(fs.readFileSync(config, 'utf-8')) : null;
     } catch (err) {
         throw new Error('configuration is invalid');
     }
 };
 
-(async () => {
-    try {
-        const _args = await args;
+const ServerFactory = { standalone: StandaloneServer, node: NodeServer, hub: HubServer } as const;
+const configStores = [copperConfig, nodeConfig, gridConfig];
 
-        const command = (_args._[0] as keyof typeof ServerFactory) || 'standalone';
-        const config = parseJsonFile(_args.config);
-        const port: number = config.port || _args.port;
-        if (_args.silent) {
+type modes = keyof typeof ServerFactory;
+
+(async () => {
+    const mode: modes = (args._[0] as any) || 'standalone';
+    if (!ServerFactory[mode]) {
+        throw new Error(`unknown command ${mode}. run copper --help for more information`);
+    }
+    try {
+        const config = parseJsonFile(args.config);
+        config.port = config.port || args.port;
+        configStores.forEach((store) => {
+            store.value = config;
+        });
+        if (args.silent) {
             logger.level = 'silent';
         }
 
-        const server = new ServerFactory[command](
-            {
-                port,
-                routesPrefix: _args['route-prefix'],
-                logLevel: _args.silent ? 'silent' : 'info',
-                defaultSessionOptions: parseJsonFile(_args['default-session-options'], null),
-            },
-            config,
-        );
+        const server = new ServerFactory[mode]({
+            port: config.port,
+            logLevel: args.silent ? 'silent' : 'info',
+        });
         await server.listen();
-        logger.info(`Copper ${command} up and listening on port ${port}`);
+        logger.info(`Copper ${mode} up and listening on port ${config.port}`);
     } catch (e) {
         logger.error(e);
     }

@@ -1,6 +1,7 @@
 import * as puppeteer from 'puppeteer';
 import { expect } from 'chai';
 import { StandaloneServer } from '../src/standalone/server';
+import { copperConfig } from '../src/standalone/config';
 
 const PORT = 9115;
 
@@ -10,11 +11,8 @@ describe('standalone e2e', () => {
     let page: puppeteer.Page;
 
     before(async () => {
-        server = new StandaloneServer({
-            port: PORT,
-            logLevel: 'silent',
-            defaultSessionOptions: { chromeFlags: ['--headless', '--disable-gpu'] },
-        });
+        copperConfig.value = { defaultSessionOptions: { chromeFlags: ['--headless', '--disable-gpu'] } };
+        server = new StandaloneServer({ port: PORT, logLevel: 'silent' });
         await server.listen();
         browser = await puppeteer.connect({ browserWSEndpoint: `ws://localhost:${PORT}` });
         page = (await browser.pages())[0];

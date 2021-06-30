@@ -4,5 +4,6 @@
     "hubHost": "hub",
     "hubPort": "9115",
     "maxSession": 5,
-    "nodePolling": 10000
+    "nodePolling": 10000,
+    "defaultSessionOptions": { "chromeFlags": ["--headless", "--disable-gpu"] }
 }

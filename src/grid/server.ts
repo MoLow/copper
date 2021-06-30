@@ -5,20 +5,20 @@ import { registerErrorHandler } from '../common/errors';
 import { registerGridRoutes } from './gridRoutes';
 import { grid } from './grid';
 import { registerSessionProxy } from './sessionProxy';
-import { DEFAULT_URL_PREFIX, delay, ICopperServerConfig } from '../common/utils';
-
+import { delay, ICopperServerConfig } from '../common/utils';
+import { copperConfig } from '../standalone/config';
 export class HubServer {
     private app: FastifyInstance;
     private port: number;
 
-    constructor({ port, routesPrefix, logLevel, defaultSessionOptions }: ICopperServerConfig) {
+    constructor({ port, logLevel }: ICopperServerConfig) {
         this.port = port;
         this.app = fastify({ logger: { level: logLevel }, bodyLimit: 1024 * 1024 * 100 });
 
-        this.app.register(registerSessionRoutes, { prefix: routesPrefix ?? DEFAULT_URL_PREFIX });
-        this.app.register(registerSessionProxy, { prefix: routesPrefix ?? DEFAULT_URL_PREFIX });
+        this.app.register(registerSessionRoutes, { prefix: copperConfig.value.routesPrefix });
+        this.app.register(registerSessionProxy, { prefix: copperConfig.value.routesPrefix });
         this.app.register(registerGridRoutes, { prefix: '/grid/' });
-        this.app.register(registerWebsocket, { handler: grid, defaultSessionOptions });
+        this.app.register(registerWebsocket, grid);
         this.app.register(registerErrorHandler);
     }
     async listen() {
