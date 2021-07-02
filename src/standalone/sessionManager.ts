@@ -5,14 +5,23 @@ import * as stream from 'stream';
 import * as unzipper from 'unzipper';
 import * as mkdirp from 'mkdirp';
 import * as uuid from 'uuid';
+import * as puppeteer from 'puppeteer';
 import fetch from 'node-fetch';
 import { launch, Options, LaunchedChrome } from 'chrome-launcher';
 import { logger } from '../logger';
 import { CreateSessionError, SessionNotFound } from '../common/errors';
 import { IWebSocketHandler } from '../common/websockets';
+import { copperConfig } from './config';
 
 export type SessionOptions = Omit<Options, 'handleSIGINT'>;
-export type CreateSessionArgs = { chromeOptions?: SessionOptions; desiredCapabilities?: any };
+export type CreateSessionArgs = {
+    chromeOptions?: SessionOptions;
+    desiredCapabilities?: desiredCapabilities;
+    capabilities?: {
+        alwaysMatch?: desiredCapabilities;
+        firstMatch?: desiredCapabilities[];
+    };
+};
 
 export interface Session {
     chrome: LaunchedChrome;
@@ -24,6 +33,10 @@ export interface Session {
         'V8-Version': string;
         'WebKit-Version': string;
         webSocketDebuggerUrl: string;
+    };
+    puppeteer?: {
+        browser: puppeteer.Browser;
+        page: puppeteer.Page;
     };
 }
 
@@ -37,7 +50,9 @@ type desiredCapabilities = Partial<
             extensions?: Array<string>;
         }
     >
->;
+> & {
+    browserName: 'chrome';
+};
 
 export type serializedSession = Session['wsInfo'] & {
     id: string;
@@ -117,12 +132,22 @@ export class SessionManager implements IWebSocketHandler {
         await mkdirp(profilePath);
     }
 
-    async createSession({ chromeOptions = {}, desiredCapabilities = {} }: CreateSessionArgs = {}) {
+    private parseSessionRequest(args: CreateSessionArgs = {}) {
+        const capabilities = args.capabilities?.alwaysMatch ||
+            args.capabilities?.firstMatch?.find(() => true) ||
+            args.desiredCapabilities || { browserName: 'chrome' };
+        const chromeOptions = args.chromeOptions;
+
+        return { chromeOptions, capabilities };
+    }
+
+    async createSession(args: CreateSessionArgs = {}) {
         const id = uuid.v4().toUpperCase();
+        const { capabilities, chromeOptions } = this.parseSessionRequest(args);
 
         try {
-            await this.handleExtensions(desiredCapabilities, id);
-            const w3cArgs = [...(this.getChromeOptions(desiredCapabilities)?.args || [])];
+            await this.handleExtensions(capabilities, id);
+            const w3cArgs = [...(this.getChromeOptions(capabilities)?.args || [])];
             const options: SessionOptions = Object.assign(
                 {},
                 chromeOptions,
@@ -132,7 +157,12 @@ export class SessionManager implements IWebSocketHandler {
             const chrome = await launch(options);
             const wsInfo = await fetch(`http://localhost:${chrome.port}/json/version`).then((res) => res.json());
             const wsUrl = wsInfo.webSocketDebuggerUrl;
-            const session = { chrome, wsInfo, wsUrl };
+            const session: Session = { chrome, wsInfo, wsUrl };
+            if (copperConfig.value.enableW3CProtocol) {
+                const browser = await puppeteer.connect({ browserWSEndpoint: wsUrl });
+                const page = (await browser.pages())[0];
+                session.puppeteer = { browser, page };
+            }
             this.sessions.set(id, session);
             return this.serializeSession(id, session);
         } catch (err) {
@@ -145,6 +175,7 @@ export class SessionManager implements IWebSocketHandler {
         this.getSession(id); // throw if no session
         try {
             const session = this.sessions.get(id)!;
+            await session.puppeteer?.browser?.disconnect();
             await session.chrome.kill();
         } catch (err) {
             logger.error({ err, id }, 'error removing a session');
@@ -166,6 +197,12 @@ export class SessionManager implements IWebSocketHandler {
         this.getSession(id); // throw if no session
         const session = this.sessions.get(id)!;
         return session.wsUrl;
+    }
+
+    getPuppeteer(id: string) {
+        this.getSession(id); // throw if no session
+        const session = this.sessions.get(id)!;
+        return session.puppeteer;
     }
 
     listSessions() {

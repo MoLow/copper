@@ -5,6 +5,7 @@ import { sessionManager } from './sessionManager';
 import { registerErrorHandler } from '../common/errors';
 import { delay, ICopperServerConfig } from '../common/utils';
 import { copperConfig } from './config';
+import { webdriver } from './webdriver/commands';
 
 export class StandaloneServer {
     private app: FastifyInstance;
@@ -16,6 +17,7 @@ export class StandaloneServer {
 
         this.app.register(registerRoutes, { prefix: copperConfig.value.routesPrefix });
         this.app.register(registerWebsocket, sessionManager);
+        this.app.register(webdriver, { prefix: `${copperConfig.value.routesPrefix}session/:sessionId/` });
         this.app.register(registerErrorHandler);
     }
     async listen() {

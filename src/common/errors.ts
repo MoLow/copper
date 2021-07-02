@@ -51,6 +51,11 @@ export class NoMatchingNode extends CopperError {
         super(error, 'no matching node', StatusCodes.NOT_FOUND);
     }
 }
+export class WebdriverError extends CopperError {
+    constructor(error: string) {
+        super(error, 'Webdriver Protocol Error', StatusCodes.BAD_REQUEST);
+    }
+}
 
 export const registerErrorHandler: FastifyPluginCallback = (app, opts, done) => {
     app.setErrorHandler(async function (error, request, reply) {

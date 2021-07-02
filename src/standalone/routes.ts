@@ -1,7 +1,5 @@
 import { FastifyPluginCallback } from 'fastify';
-import { UnsupportedActionError } from '../common/errors';
 import { addWsUrl } from '../common/utils';
-import { copperConfig } from './config';
 import { CreateSessionArgs, sessionManager } from './sessionManager';
 
 export type withSessionId = { Params: { sessionId: string } };
@@ -30,13 +28,6 @@ export const registerRoutes: FastifyPluginCallback = (app, opts, done) => {
     app.delete<withSessionId>('/session/:sessionId', async (req) => {
         await sessionManager.removeSession(req.params.sessionId);
         return { status: 0, value: null, sessionId: null, state: 'success' };
-    });
-
-    app.all<withSessionId>('/session/:sessionId/*', async (req) => {
-        if (!copperConfig.value.enableW3CProtocol) {
-            throw new UnsupportedActionError(`unsupported action: ${req.url}`);
-        }
-        return { status: 0, value: null, state: 'success' };
     });
 
     done();
