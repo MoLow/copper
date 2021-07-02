@@ -15,7 +15,8 @@ export class Node {
     constructor(private config: NodeConfig) {
         this.config.urlPrefix = copperConfig.value.routesPrefix;
         this.config.maxSession = this.config.maxSession ?? Number.POSITIVE_INFINITY;
-        if (this.config.maxSession === 1) {
+        this.config.nodePolling = this.config.nodePolling || 10000;
+        if (this.config.maxSession < 1) {
             this.config.maxSession = Number.POSITIVE_INFINITY;
         }
         this.checkIsAlive();
@@ -62,6 +63,7 @@ export class Node {
     }
 
     deregister() {
+        this.isAlive = false;
         this.shouldCheckIsAlive = false;
     }
 
@@ -81,7 +83,7 @@ export class Node {
             }
             this.isAlive = false;
         }
-        await delay(this.config.nodePolling || 10000);
+        await delay(this.config.nodePolling);
         process.nextTick(() => this.checkIsAlive());
     }
 }
@@ -154,10 +156,6 @@ export class Grid implements IWebSocketHandler {
 
     getNode(sessionId: string) {
         const nodeId = this.sessionNodeMap.get(this.getSession(sessionId)!.id)!;
-        if (!this.nodes.has(nodeId)) {
-            throw new NoMatchingNode(`node ${nodeId} not registerd`);
-        }
-
         return this.nodes.get(nodeId)!;
     }
 

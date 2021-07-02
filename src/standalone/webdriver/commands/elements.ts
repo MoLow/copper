@@ -70,7 +70,7 @@ export const elements: FastifyPluginCallback = (app, opts, done) => {
             throw new Error(`element ${elementId} does not exist`);
         }
 
-        const value = await elementHandle.evaluate((el) => el.innerHTML);
+        const value = await elementHandle.evaluate(/* istanbul ignore next */ (el) => el.innerHTML);
 
         return { status: 0, value, state: 'success' };
     });
