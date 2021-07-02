@@ -171,7 +171,7 @@ export class Grid implements IWebSocketHandler {
         const node = this.getNode(sessionId);
         node.deregisterSession(sessionId);
         this._removeSession(sessionId);
-        await fetch(`${node.URL}${node.urlPrefix}session/${sessionId}`, {
+        return await fetch(`${node.URL}${node.urlPrefix}session/${sessionId}`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
         }).then((res) => res.json());

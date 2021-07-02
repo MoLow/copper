@@ -95,6 +95,7 @@ describe('webdriver', () => {
         after(async () => {
             copperConfig.reset();
             nodeConfig.reset();
+            await browser.deleteSession();
             await node.stop();
             await hub.stop();
         });
