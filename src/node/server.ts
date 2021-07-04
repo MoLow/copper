@@ -18,7 +18,7 @@ export class NodeServer extends StandaloneServer {
         await this.deregister();
         return result;
     }
-    async register(retries = 50) {
+    async register(retries = nodeConfig.value.registerRetries) {
         try {
             await fetch(`http://${nodeConfig.value.hubHost}:${nodeConfig.value.hubPort}/grid/node`, {
                 method: 'POST',
@@ -30,11 +30,11 @@ export class NodeServer extends StandaloneServer {
                 throw err;
             }
             logger.error('error registering node. retrying in 5 seconds');
-            await delay(5000);
+            await delay(nodeConfig.value.registerInterval);
             process.nextTick(() => this.register(retries - 1));
         }
     }
-    async deregister(retries = 3) {
+    async deregister(retries = nodeConfig.value.deregisterRetries) {
         try {
             await fetch(`http://${nodeConfig.value.hubHost}:${nodeConfig.value.hubPort}/grid/node`, {
                 method: 'DELETE',
@@ -46,7 +46,7 @@ export class NodeServer extends StandaloneServer {
                 throw err;
             }
             logger.error('error deregistering node. retrying in 5 seconds');
-            await delay(2500);
+            await delay(nodeConfig.value.deregisterInterval);
             process.nextTick(() => this.deregister(retries - 1));
         }
     }

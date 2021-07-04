@@ -8,6 +8,10 @@ export interface NodeConfig {
     maxSession: number;
     nodePolling: number;
     urlPrefix?: string;
+    registerRetries: number;
+    registerInterval: number;
+    deregisterRetries: number;
+    deregisterInterval: number;
 }
 
 export const nodeConfig = new ConfigStore<NodeConfig>({
@@ -16,4 +20,8 @@ export const nodeConfig = new ConfigStore<NodeConfig>({
     maxSession: 5,
     nodePolling: 10000,
     port: 9116,
+    registerRetries: 50,
+    registerInterval: 5000,
+    deregisterRetries: 3,
+    deregisterInterval: 5000,
 });

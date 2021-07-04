@@ -7,7 +7,7 @@
     "build": "tsc",
     "start-dev": "node -r ts-node/register ./index.ts",
     "start": "node -r source-map-support/register ./index.js",
-    "test": "yarn unit && yarn e2e",
+    "test": "LOG_ENABLED=false mocha src/**/*.test.ts tests/**/*.test.ts",
     "e2e": "LOG_ENABLED=false mocha tests/**/*.test.ts",
     "unit": "LOG_ENABLED=false mocha src/**/*.test.ts",
     "coverage": "nyc yarn test",

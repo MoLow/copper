@@ -4,7 +4,7 @@ export class ConfigStore<T> {
         this._default = Object.assign({}, _value);
     }
 
-    get value() {
+    get value(): T {
         return this._value;
     }
     set value(val: Partial<T>) {

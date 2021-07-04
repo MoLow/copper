@@ -11,7 +11,7 @@ export const registerRoutes: FastifyPluginCallback = (app, opts, done) => {
 
     app.get('/sessions', async () => {
         const value = sessionManager.listSessions();
-        return { statue: 0, value };
+        return { status: 0, value };
     });
 
     app.post<{ Body: CreateSessionArgs }>('/session', async (req) => {

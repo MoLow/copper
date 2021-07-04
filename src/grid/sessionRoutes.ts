@@ -11,7 +11,7 @@ export const registerSessionRoutes: FastifyPluginCallback = (app, opts, done) =>
 
     app.get('/sessions', async () => {
         const value = grid.listSessions();
-        return { statue: 0, value };
+        return { status: 0, value };
     });
 
     app.post<{ Body: Record<string, unknown> }>('/session', async (req) => {
