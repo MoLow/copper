@@ -25,10 +25,10 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
       - run: |
-          yarn build &&\
-          yarn publish --new-version $RELEASE_VERSION &&\
           git config --global user.email auto@copper.js &&\
           git config --global user.name "${{ github.actor }}"&&\
+          yarn build &&\
+          yarn publish --new-version $RELEASE_VERSION &&\
           git push --follow-tags origin main
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
