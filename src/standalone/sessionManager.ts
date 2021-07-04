@@ -97,7 +97,7 @@ export class SessionManager implements IWebSocketHandler {
                 readStream
                     .pipe(unzipper.Extract({ path: file }))
                     .on('error', (err) => reject(err))
-                    .on('finish', () => {
+                    .on('close', () => {
                         this.extensions.set(checksum, file);
                         this.extensionsPending.delete(checksum);
                         resolve(file);
@@ -116,7 +116,7 @@ export class SessionManager implements IWebSocketHandler {
         const extDir = path.join(os.tmpdir(), sessionId);
         await mkdirp(extDir);
         chromeOptions.args = chromeOptions.args || [];
-        const extensions: string[] = desiredCapabilities?.chromeOptions?.extensions || [];
+        const extensions: string[] = chromeOptions.extensions;
         await Promise.all(
             extensions.map((extension) =>
                 this.saveExtensionLocally(extension, extDir).then((file) =>
