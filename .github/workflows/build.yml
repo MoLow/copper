@@ -28,7 +28,7 @@ jobs:
           git config --global user.email auto@copper.js &&\
           git config --global user.name "${{ github.actor }}"&&\
           yarn build &&\
-          yarn publish --new-version $RELEASE_VERSION &&\
+          yarn publish --new-version $RELEASE_VERSION --no-git-tag-version &&\
           git push --follow-tags origin main
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
