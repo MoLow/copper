@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+      - name: Set env
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
@@ -21,15 +23,21 @@ jobs:
           path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
-      - run: yarn build
-      - uses: bcomnes/npm-bump@v1.0.4
+      - run: |
+          yarn build &&\
+          yarn publish --new-version $RELEASE_VERSION &&\
+          git push --follow-tags origin main
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - uses:  'phips28/gh-action-bump-version@master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          git_email: auto@copper.js
-          git_username: ${{ github.actor }}
-          newversion: ${{ github.event.inputs.newversion }}
-          push_version_commit: true
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          npm_token: ${{ secrets.NPM_TOKEN }}
+          tag-prefix:  'v'
+          target-branch: 'main'
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
       - name: build docker images
         run: |
           docker build -f docker/Dockerfile.base . -t copper/base \
