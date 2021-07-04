@@ -22,6 +22,12 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
       - run: yarn build
+      - uses:  'phips28/gh-action-bump-version@master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag-prefix:  'v'
+          target-branch: 'main'
       - name: build docker images
         run: |
           docker build -f docker/Dockerfile.base . -t copper/base \
@@ -31,12 +37,6 @@ jobs:
           && docker build -f docker/Dockerfile.node . -t copper/node \
           && docker build -f docker/Dockerfile.standalone . -t copper/standalone \
           && docker build -f docker/Dockerfile.standalone-headless . -t copper/standalone-headless
-      - uses:  'phips28/gh-action-bump-version@master'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag-prefix:  'v'
-          target-branch: 'main'
       - uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
