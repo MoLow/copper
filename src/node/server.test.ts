@@ -49,7 +49,7 @@ describe('nodeServer', () => {
         fetchStub.rejects(new Error('error'));
         await nodeServer.register(2);
         await delay(2);
-        expect(fetchStub.callCount).to.be.greaterThan(2);
+        expect(fetchStub.callCount).to.be.greaterThanOrEqual(2);
     });
 
     it('should deregister from hub', async () => {
@@ -69,6 +69,6 @@ describe('nodeServer', () => {
         fetchStub.rejects(new Error('error'));
         await nodeServer.deregister(2);
         await delay(2);
-        expect(fetchStub.callCount).to.be.greaterThan(2);
+        expect(fetchStub.callCount).to.be.greaterThanOrEqual(2);
     });
 });

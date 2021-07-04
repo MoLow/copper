@@ -13,7 +13,7 @@ declare module 'fastify' {
 }
 
 export const webdriver: FastifyPluginCallback = (app, opts, done) => {
-    app.addHook<withSessionId>('preHandler', async (req, res, next) => {
+    app.addHook<withSessionId>('preHandler', async (req, res) => {
         req.puppeteer = sessionManager.getPuppeteer(req.params.sessionId)!;
         if (!copperConfig.value.enableW3CProtocol || !req.puppeteer) {
             throw new UnsupportedActionError(`w3c webdriver protocol is disabled`);

@@ -1,13 +1,12 @@
 import { StatusCodes } from 'http-status-codes';
 import { FastifyPluginCallback } from 'fastify';
 import { logger } from '../logger';
-
-export class BaseError {
-    constructor(...args: any[]) {
-        Error.apply(this, args as any);
+export class BaseError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = new.target.name;
     }
 }
-BaseError.prototype = new Error();
 
 export class CopperError extends BaseError {
     /**
@@ -16,7 +15,7 @@ export class CopperError extends BaseError {
      * @param {string} error  - a constant message (e.g entity not found)
      * @param {number} statusCode
      */
-    constructor(public message: string | Error, public error: string, public statusCode = StatusCodes.BAD_REQUEST) {
+    constructor(public message: string, public error: string, public statusCode = StatusCodes.BAD_REQUEST) {
         super(message);
     }
 
@@ -35,7 +34,7 @@ export class SessionNotFound extends CopperError {
 }
 
 export class CreateSessionError extends CopperError {
-    constructor(error: Error) {
+    constructor(error: string) {
         super(error, 'failed creating a session', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }

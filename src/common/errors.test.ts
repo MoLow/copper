@@ -23,7 +23,7 @@ describe('errors', () => {
     });
 
     it('CreateSessionError should have 500 error code', () => {
-        const error = new CreateSessionError(new Error('message'));
+        const error = new CreateSessionError('message');
         expect(error.statusCode).to.equal(500);
     });
 
