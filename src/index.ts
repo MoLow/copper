@@ -15,6 +15,8 @@ const { version } = require('../package.json');
 
 const args = yargs(hideBin(process.argv))
     .command('standalone', 'start a Copper standalone server')
+    .command('hub', 'start a Copper hub')
+    .command('node', 'start a Copper node')
     .option('port', {
         describe: "Copper's port",
         default: 9115,
@@ -54,7 +56,8 @@ type modes = keyof typeof ServerFactory;
     }
     const mode: modes = (args._[0] as any) || 'standalone';
     if (!ServerFactory[mode]) {
-        throw new Error(`unknown command ${mode}. run copper --help for more information`);
+        console.error(`unknown command ${mode}. run copper --help for more information`);
+        return;
     }
     try {
         const config = parseJsonFile(args.config);
