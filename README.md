@@ -1,4 +1,4 @@
-[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/MoLow/copper/test%20project/main)](https://github.com/MoLow/copper/actions?query=branch%3Amain+event%3Apush) [![Codecov branch](https://img.shields.io/codecov/c/github/MoLow/copper/main)](https://codecov.io/gh/MoLow/copper)
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/MoLow/copper/test%20project/main)](https://github.com/MoLow/copper/actions?query=branch%3Amain+event%3Apush) [![Codecov branch](https://img.shields.io/codecov/c/github/MoLow/copper/main)](https://codecov.io/gh/MoLow/copper) [![npm (scoped)](https://img.shields.io/npm/v/@copperjs/copper)](https://www.npmjs.com/package/@copperjs/copper)
 
 
 # Copper
