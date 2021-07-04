@@ -66,7 +66,8 @@ As you can see - Copper is right in between Chromium and Selenium in the Periodi
 - [x] create docker files for standalone, headless standalone, node, headless node, hub
 - [x] write some uts
 - [x] write nice readme
-- [ ] publish to npm & Dockerhub
+- [x] publish to npm
+- [ ] support Docker and publish to Dockerhub
 - [ ] support w3c Webdriver commands (WIP)
 - [ ] support TLS
 - [ ] support HTTP2
