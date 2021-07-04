@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 import 'make-promises-safe';
 import * as fs from 'fs';
 import * as yargs from 'yargs';
@@ -10,13 +12,22 @@ import { copperConfig } from './standalone/config';
 import { nodeConfig } from './node/config';
 import { gridConfig } from './grid/config';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { version } = require('../package.json');
+
 const args = yargs(hideBin(process.argv))
     .command('standalone', 'start a Copper standalone server')
     .option('port', {
         describe: "Copper's port",
         default: 9115,
     })
+    .option('version', {
+        alias: 'v',
+        describe: 'print version',
+        type: 'boolean',
+    })
     .option('config', {
+        alias: 'c',
         describe: 'configuration json file',
         type: 'string',
     })
@@ -39,6 +50,10 @@ const configStores = [copperConfig, nodeConfig, gridConfig];
 type modes = keyof typeof ServerFactory;
 
 (async () => {
+    console.log(`Copper version ${version}`);
+    if (args.version) {
+        return;
+    }
     const mode: modes = (args._[0] as any) || 'standalone';
     if (!ServerFactory[mode]) {
         throw new Error(`unknown command ${mode}. run copper --help for more information`);
