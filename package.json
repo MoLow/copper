@@ -1,8 +1,15 @@
 {
   "name": "copper",
   "version": "1.0.0",
-  "description": "A chromium grid",
+  "description": "A lightweight chromium grid",
   "main": "index.js",
+  "bin": {
+    "copper": "index.js"
+  },
+  "homepage": "https://github.com/MoLow/copper",
+  "repository": { "url": "https://github.com/MoLow/copper" },
+  "keywords": ["selenium", "chrome", "copper", "grid", "webdriver", "testing"],
+  "author": "MoLow",
   "scripts": {
     "build": "tsc",
     "start-dev": "node -r ts-node/register ./index.ts",
@@ -14,8 +21,7 @@
     "lint": "eslint 'src/**/*.ts' 'tests/**/*.ts' --quiet",
     "prepare": "husky install"
   },
-  "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "chrome-launcher": "^0.14.0",
     "fastify": "^3.18.0",

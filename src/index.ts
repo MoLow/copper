@@ -27,7 +27,7 @@ const args = yargs(hideBin(process.argv))
 
 const parseJsonFile = (config?: string) => {
     try {
-        return config ? JSON.parse(fs.readFileSync(config, 'utf-8')) : null;
+        return config ? JSON.parse(fs.readFileSync(config, 'utf-8')) : {};
     } catch (err) {
         throw new Error('configuration is invalid');
     }
