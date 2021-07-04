@@ -1,15 +1,22 @@
 {
   "name": "@copperjs/copper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A lightweight chromium grid",
   "main": "index.js",
   "bin": {
     "copper": "index.js"
   },
-  "homepage": "https://github.com/MoLow/copper",
-  "repository": "github:MoLow/copper",
-  "keywords": ["selenium", "chrome", "copper", "grid", "webdriver", "testing"],
-  "author": "MoLow",
+  "homepage": "https://github.com/copperjs/copper",
+  "repository": "github:copperjs/copper",
+  "keywords": [
+    "selenium",
+    "chrome",
+    "copper",
+    "grid",
+    "webdriver",
+    "testing"
+  ],
+  "author": "copperjs",
   "scripts": {
     "build": "tsc",
     "start-dev": "node -r ts-node/register ./index.ts",
