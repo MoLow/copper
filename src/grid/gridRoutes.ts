@@ -4,7 +4,7 @@ import { grid } from './grid';
 
 export const registerGridRoutes: FastifyPluginCallback = (app, opts, done) => {
     app.get('/status', async () => {
-        return { ready: true, message: 'Copper Grid Is Ready' };
+        return { ready: true, message: 'Copper Grid Is Ready1' };
     });
 
     app.post<{ Body: { config: NodeConfig } }>('/node', async (req) => {
