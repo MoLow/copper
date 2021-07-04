@@ -25,11 +25,8 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn
       - run: |
-          git config --global user.email auto@copper.js &&\
-          git config --global user.name "${{ github.actor }}"&&\
           yarn build &&\
-          yarn publish --new-version $RELEASE_VERSION --no-git-tag-version &&\
-          git push --follow-tags origin main
+          yarn publish --new-version $RELEASE_VERSION --no-git-tag-version
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - uses: JS-DevTools/npm-publish@v1
