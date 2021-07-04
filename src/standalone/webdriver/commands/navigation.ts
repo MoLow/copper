@@ -1,5 +1,5 @@
 import { FastifyPluginCallback } from 'fastify';
-import { PuppeteerLifeCycleEvent } from 'puppeteer';
+import { PuppeteerLifeCycleEvent } from 'puppeteer-core';
 import { WebdriverError } from '../../../common/errors';
 
 export const navigation: FastifyPluginCallback = (app, opts, done) => {

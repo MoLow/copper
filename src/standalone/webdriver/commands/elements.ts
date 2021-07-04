@@ -1,5 +1,5 @@
 import { FastifyPluginCallback } from 'fastify';
-import { ElementHandle, Page } from 'puppeteer';
+import { ElementHandle, Page } from 'puppeteer-core';
 import { WebdriverError } from '../../../common/errors';
 
 const W3C_ELEMENT_ID = 'element-6066-11e4-a52e-4f735466cecf';

@@ -5,7 +5,7 @@ import * as stream from 'stream';
 import * as unzipper from 'unzipper';
 import * as mkdirp from 'mkdirp';
 import * as uuid from 'uuid';
-import * as puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer-core';
 import fetch from 'node-fetch';
 import { launch, Options, LaunchedChrome } from 'chrome-launcher';
 import { logger } from '../logger';

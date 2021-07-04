@@ -5,7 +5,7 @@ import * as mkdirp from 'mkdirp';
 import * as readDir from 'recursive-readdir';
 import * as os from 'os';
 import * as proxyquire from 'proxyquire';
-import * as puppeteer from 'puppeteer';
+import * as puppeteer from 'puppeteer-core';
 import { SessionManager as SessionManagerType } from './sessionManager';
 import { expect } from 'chai';
 import { CreateSessionError, SessionNotFound } from '../common/errors';
