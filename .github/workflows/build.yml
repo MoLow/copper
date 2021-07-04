@@ -31,3 +31,6 @@ jobs:
           && docker build -f docker/Dockerfile.node . -t copper/node \
           && docker build -f docker/Dockerfile.standalone . -t copper/standalone \
           && docker build -f docker/Dockerfile.standalone-headless . -t copper/standalone-headless
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
