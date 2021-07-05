@@ -23,5 +23,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: benchmarks
-          path: |
-            tests/benchmarks/results.json
+          path: tests/benchmarks/results.json
