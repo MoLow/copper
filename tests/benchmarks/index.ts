@@ -129,7 +129,7 @@ async function measureBasicSession() {
             );
             nodeServer.stdout?.on('data', (data) => console.log(data.toString()));
             nodeServer.stderr?.on('data', (data) => console.log(data.toString()));
-            await delay(1500);
+            await delay(2000);
             return { nodeServer, hubServer, url: 'http://localhost:4439/wd/hub', step: 'start driver' };
         },
         createSession,
