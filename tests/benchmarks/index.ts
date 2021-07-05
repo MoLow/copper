@@ -100,6 +100,7 @@ async function measureBasicSession() {
                 `java  -D${chromedriver.path} -jar ./selenium-server-standalone-3.141.59.jar -port 4441`,
                 { cwd: __dirname },
             );
+            server.stderr?.on('data', (data) => console.log(data.toString()));
             await delay(500);
             return { server, url: 'http://localhost:4441/wd/hub', step: 'start driver' };
         },
@@ -118,11 +119,13 @@ async function measureBasicSession() {
                 `java -jar ./selenium-server-standalone-3.141.59.jar -port 4439 -role hub`,
                 { cwd: __dirname },
             );
+            hubServer.stderr?.on('data', (data) => console.log(data.toString()));
             await delay(500);
             const nodeServer = childProcess.exec(
                 `java -jar -D${chromedriver.path} ./selenium-server-standalone-3.141.59.jar -port 4440 -role node -hubPort 4439`,
                 { cwd: __dirname },
             );
+            nodeServer.stderr?.on('data', (data) => console.log(data.toString()));
             await delay(1500);
             return { nodeServer, hubServer, url: 'http://localhost:4439/wd/hub', step: 'start driver' };
         },
