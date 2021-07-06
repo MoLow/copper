@@ -57,9 +57,9 @@ const waitForServerUp = async (url: string, interval = 50, retries = 100): Promi
 };
 
 const killByPort = (port: number) => {
-    childProcess.execSync(`kill -9 $(lsof -t -i:${port})`, {
-        stdio: 'inherit',
-    });
+    try {
+        childProcess.execSync(`kill -9 $(lsof -t -i:${port})`, { stdio: 'inherit' });
+    } catch {}
 };
 
 async function measureBasicSession() {
