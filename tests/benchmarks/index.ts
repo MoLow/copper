@@ -57,8 +57,8 @@ const waitForServerUp = async (url: string, interval = 50, retries = 100): Promi
 };
 
 const killByPort = (port: number) => {
-    const cmd = `netstat -aon | grep ${port} | awk '{print $7}' | xargs kill`;
-    childProcess.execSync(cmd, { stdio: 'ignore' });
+    childProcess.execSync(`wget https://raw.github.com/abdennour/miscs.sh/master/killport`, { stdio: 'inherit' });
+    childProcess.execSync(`killport ${port}`, { stdio: 'inherit' });
 };
 
 async function measureBasicSession() {
