@@ -45,9 +45,9 @@ export class BenchmarkerFlow<
 
 async function* aggregateRoundRobin(sources: AsyncIterator<any>[]) {
     do {
-        const results = await Promise.all(sources.map((s) => s.next()));
-        for (const i in results) {
-            const r = results[i];
+        const promiseFactory = sources.map((s) => s.next);
+        for (const i in promiseFactory) {
+            const r = await promiseFactory[i]();
             if (r.done) {
                 sources.splice(Number(i), 1);
             } else {

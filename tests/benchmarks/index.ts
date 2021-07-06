@@ -10,7 +10,7 @@ import { copperConfig } from '../../src/standalone/config';
 import { Benchmarker, BenchmarkerFlow } from './benchmarker';
 import { delay } from '../../src/common/utils';
 
-const ITERATIONS = 2;
+const ITERATIONS = 200;
 
 const createSession = async <T extends { url: string }>(data: T) => {
     const res = await fetch(`${data.url}/session`, {
@@ -131,8 +131,6 @@ async function measureBasicSession() {
                 `java  -D${chromedriver.path} -jar ./selenium-server-standalone-3.141.59.jar -port 4441`,
                 { cwd: __dirname },
             );
-            server.stdout?.on('data', (data) => console.log(data.toString()));
-            server.stderr?.on('data', (data) => console.log(data.toString()));
             await waitForServerUp('http://localhost:4441/wd/hub/status');
             return { server, url: 'http://localhost:4441/wd/hub', step: 'start driver' };
         },
@@ -157,10 +155,6 @@ async function measureBasicSession() {
                 `java -jar -D${chromedriver.path} ./selenium-server-standalone-3.141.59.jar -port 4440 -role node -hubPort 4439`,
                 { cwd: __dirname },
             );
-            hubServer.stdout?.on('data', (data) => console.log(data.toString()));
-            hubServer.stderr?.on('data', (data) => console.log(data.toString()));
-            nodeServer.stdout?.on('data', (data) => console.log(data.toString()));
-            nodeServer.stderr?.on('data', (data) => console.log(data.toString()));
             await waitForServerUp('http://localhost:4439/wd/hub/status');
             await waitForServerUp('http://localhost:4440/wd/hub/status');
             return { nodeServer, hubServer, url: 'http://localhost:4439/wd/hub', step: 'start driver' };
@@ -175,7 +169,7 @@ async function measureBasicSession() {
         },
     );
 
-    const marker = new Benchmarker(/*chromeDriver, copperStandalone, copperGrid,*/ seleniumStandalone, seleniumGrid);
+    const marker = new Benchmarker(chromeDriver, copperStandalone, copperGrid, seleniumStandalone, seleniumGrid);
     await marker.run();
 
     console.log(marker.results);
