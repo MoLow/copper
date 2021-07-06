@@ -58,7 +58,10 @@ const waitForServerUp = async (url: string, interval = 100, retries = 100): Prom
 
 const killByPort = (port: number) => {
     try {
-        childProcess.execSync(`kill -9 $(lsof -t -i:${port})`, { stdio: 'ignore' });
+        const pid = childProcess.execSync(`lsof -t -i:${port}`, { stdio: 'ignore' });
+        if (pid) {
+            childProcess.execSync(`kill -9 ${pid}`, { stdio: 'ignore' });
+        }
     } catch {}
 };
 
@@ -172,7 +175,7 @@ async function measureBasicSession() {
         },
     );
 
-    const marker = new Benchmarker(/*chromeDriver, copperStandalone, copperGrid,*/ seleniumStandalone); //, seleniumGrid);
+    const marker = new Benchmarker(/*chromeDriver, copperStandalone, copperGrid,*/ seleniumStandalone, seleniumGrid);
     await marker.run();
 
     console.log(marker.results);
