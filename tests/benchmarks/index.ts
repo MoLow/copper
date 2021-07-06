@@ -41,7 +41,10 @@ const navigate = async <T extends { url: string; sessionId: string }>(data: T) =
 
 const waitForServerUp = async (url: string, interval = 50, retries = 100): Promise<boolean> => {
     try {
-        await fetch(url);
+        const data = await (await fetch(url)).json();
+        if (!data?.value?.ready) {
+            throw new Error('server not ready');
+        }
         return true;
     } catch (err) {
         if (retries === 0) {
@@ -54,7 +57,7 @@ const waitForServerUp = async (url: string, interval = 50, retries = 100): Promi
 };
 
 const killByPort = (port: number) => {
-    const cmd = `lsof -iTCP:${port} | grep LISTEN | awk '{print $2}' | xargs kill -9`;
+    const cmd = `netstat -aon | grep ${port} | awk '{print $7}' | xargs kill`;
     childProcess.execSync(cmd, { stdio: 'ignore' });
 };
 
@@ -146,16 +149,16 @@ async function measureBasicSession() {
                 `java -jar ./selenium-server-standalone-3.141.59.jar -port 4439 -role hub`,
                 { cwd: __dirname },
             );
-            hubServer.stdout?.on('data', (data) => console.log(data.toString()));
-            hubServer.stderr?.on('data', (data) => console.log(data.toString()));
-            await waitForServerUp('http://localhost:4439/wd/hub/status');
             const nodeServer = childProcess.exec(
                 `java -jar -D${chromedriver.path} ./selenium-server-standalone-3.141.59.jar -port 4440 -role node -hubPort 4439`,
                 { cwd: __dirname },
             );
+            hubServer.stdout?.on('data', (data) => console.log(data.toString()));
+            hubServer.stderr?.on('data', (data) => console.log(data.toString()));
             nodeServer.stdout?.on('data', (data) => console.log(data.toString()));
             nodeServer.stderr?.on('data', (data) => console.log(data.toString()));
             await waitForServerUp('http://localhost:4439/wd/hub/status');
+            await waitForServerUp('http://localhost:4440/wd/hub/status');
             return { nodeServer, hubServer, url: 'http://localhost:4439/wd/hub', step: 'start driver' };
         },
         createSession,
