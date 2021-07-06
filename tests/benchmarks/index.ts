@@ -39,7 +39,7 @@ const navigate = async <T extends { url: string; sessionId: string }>(data: T) =
     return { ...data, step: 'navigate' };
 };
 
-const waitForServerUp = async (url: string, interval = 50, retries = 100): Promise<boolean> => {
+const waitForServerUp = async (url: string, interval = 100, retries = 100): Promise<boolean> => {
     try {
         const data = await (await fetch(url)).json();
         if (!data?.value?.ready) {
