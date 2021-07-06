@@ -2,7 +2,7 @@ name: benchmark
 on: workflow_dispatch
 
 jobs:
-  build:
+  benchmark:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
