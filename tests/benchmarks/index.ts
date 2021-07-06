@@ -57,7 +57,7 @@ const waitForServerUp = async (url: string, interval = 50, retries = 100): Promi
 };
 
 const killByPort = (port: number) => {
-    childProcess.execSync(`kill -9 \`lsof -w -n -i tcp:$PNUMPER| awk '{print $2}'|awk 'END{print}'\`;`, {
+    childProcess.execSync(`kill -9 $(lsof -t -i:${port})`, {
         stdio: 'inherit',
     });
 };
