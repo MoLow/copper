@@ -10,7 +10,7 @@ import { copperConfig } from '../../src/standalone/config';
 import { Benchmarker, BenchmarkerFlow } from './benchmarker';
 import { delay } from '../../src/common/utils';
 
-const ITERATIONS = 200;
+const ITERATIONS = 2;
 
 const createSession = async <T extends { url: string }>(data: T) => {
     const res = await fetch(`${data.url}/session`, {
@@ -39,10 +39,30 @@ const navigate = async <T extends { url: string; sessionId: string }>(data: T) =
     return { ...data, step: 'navigate' };
 };
 
+const waitForServerUp = async (url: string, interval = 50, retries = 100): Promise<boolean> => {
+    try {
+        await fetch(url);
+        return true;
+    } catch (err) {
+        if (retries === 0) {
+            throw err;
+        }
+        await delay(interval);
+        return waitForServerUp(url, interval, retries - 1);
+    }
+    return false;
+};
+
+const killByPort = (port: number) => {
+    const cmd = `lsof -iTCP:${port} | grep LISTEN | awk '{print $2}' | xargs kill -9`;
+    childProcess.execSync(cmd, { stdio: 'ignore' });
+};
+
 async function measureBasicSession() {
     const chromeDriver = new BenchmarkerFlow(
         { iterations: ITERATIONS, name: 'ChromeDriver' },
         async () => {
+            killByPort(9516);
             const driver = await chromedriver.start(['--url-base=/wd/hub', '--port=9516'], true);
             return { driver, url: 'http://localhost:9516/wd/hub', step: 'start driver' };
         },
@@ -58,6 +78,7 @@ async function measureBasicSession() {
     const copperStandalone = new BenchmarkerFlow(
         { iterations: ITERATIONS, name: 'Copper Standalone' },
         async () => {
+            killByPort(4444);
             const server = new StandaloneServer({ port: 4444, logLevel: 'silent' });
             await server.listen();
             return { server, url: 'http://localhost:4444/wd/hub', step: 'start driver' };
@@ -74,6 +95,8 @@ async function measureBasicSession() {
     const copperGrid = new BenchmarkerFlow(
         { iterations: ITERATIONS, name: 'Copper Grid' },
         async () => {
+            killByPort(4442);
+            killByPort(4443);
             copperConfig.value.enableW3CProtocol = true;
             const copperHub = new HubServer({ port: 4442, logLevel: 'silent' });
             nodeConfig.value = { hubPort: 4442, port: 4443 };
@@ -96,13 +119,14 @@ async function measureBasicSession() {
     const seleniumStandalone = new BenchmarkerFlow(
         { iterations: ITERATIONS, name: 'Selenium Standalone' },
         async () => {
+            killByPort(4441);
             const server = childProcess.exec(
                 `java  -D${chromedriver.path} -jar ./selenium-server-standalone-3.141.59.jar -port 4441`,
                 { cwd: __dirname },
             );
             server.stdout?.on('data', (data) => console.log(data.toString()));
             server.stderr?.on('data', (data) => console.log(data.toString()));
-            await delay(1500);
+            await waitForServerUp('http://localhost:4441/wd/hub/status');
             return { server, url: 'http://localhost:4441/wd/hub', step: 'start driver' };
         },
         createSession,
@@ -116,20 +140,22 @@ async function measureBasicSession() {
     const seleniumGrid = new BenchmarkerFlow(
         { iterations: ITERATIONS, name: 'Selenium Grid' },
         async () => {
+            killByPort(4439);
+            killByPort(4440);
             const hubServer = childProcess.exec(
                 `java -jar ./selenium-server-standalone-3.141.59.jar -port 4439 -role hub`,
                 { cwd: __dirname },
             );
             hubServer.stdout?.on('data', (data) => console.log(data.toString()));
             hubServer.stderr?.on('data', (data) => console.log(data.toString()));
-            await delay(500);
+            await waitForServerUp('http://localhost:4439/wd/hub/status');
             const nodeServer = childProcess.exec(
                 `java -jar -D${chromedriver.path} ./selenium-server-standalone-3.141.59.jar -port 4440 -role node -hubPort 4439`,
                 { cwd: __dirname },
             );
             nodeServer.stdout?.on('data', (data) => console.log(data.toString()));
             nodeServer.stderr?.on('data', (data) => console.log(data.toString()));
-            await delay(2500);
+            await waitForServerUp('http://localhost:4439/wd/hub/status');
             return { nodeServer, hubServer, url: 'http://localhost:4439/wd/hub', step: 'start driver' };
         },
         createSession,
@@ -142,7 +168,7 @@ async function measureBasicSession() {
         },
     );
 
-    const marker = new Benchmarker(chromeDriver, copperStandalone, copperGrid, seleniumStandalone, seleniumGrid);
+    const marker = new Benchmarker(/*chromeDriver, copperStandalone, copperGrid,*/ seleniumStandalone, seleniumGrid);
     await marker.run();
 
     console.log(marker.results);
